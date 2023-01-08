@@ -1,0 +1,436 @@
+/*
+// Hachi x Ni (8x2) MIDI Controller
+// v0.5
+// by Steven Noreyko
+//
+
+* Arduino IDE setup:
+ * - Select Tools / Board: Rasberry Pi Pico
+ * - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)
+ * - Select Tools / USB Stack: Adafruit TinyUSB
+ * - Optional - Tools / Debug Level: Core
+ * - Optional - Tools / Debug Port: Serial
+
+*/
+
+#include <Arduino.h>
+#include <Adafruit_NeoPixel.h> 
+#include <Adafruit_TinyUSB.h>	// https://github.com/adafruit/Adafruit_TinyUSB_Arduino
+#include <MIDI.h>				// https://github.com/FortySevenEffects/arduino_midi_library
+#include <ArduinoJson.h>		// https://arduinojson.org/
+#include <CD74HC4067.h>
+#include <ResponsiveAnalogRead.h>
+#include <LittleFS.h>
+
+// #include "Adafruit_SPIFlash.h"
+// #include "SdFat.h"
+
+// #include <elapsedMillis.h>
+
+const int TXLED = 0;
+const int RXLED = 1;
+const int REDLED = 14;
+const int NEOPIXPIN = 16;
+const int NEOPWRPIN = 17;
+
+const int channelCount = 16;
+const int numKnobs = 16;
+const int numBanks = 8;
+const int buttons[2] = {25,24};
+int buttonState[2] = {0,0};
+	
+
+int faderMin = 0;
+int faderMax = 1019;
+int shiftyTemp;
+bool activity = true;
+
+const char* save_file = "/saved_configs.json";
+
+// USB MIDI object
+Adafruit_USBD_MIDI usb_midi;
+
+// Create USB and Hardware MIDI interfaces
+MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, USBMIDI);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, HWMIDI);
+
+// NEOPIXELs
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(9, NEOPIXPIN, NEO_GRB + NEO_KHZ800);
+
+// ResponsiveAnalogRead
+ResponsiveAnalogRead *analog[channelCount];
+
+// MUX SETUP
+CD74HC4067 my_mux(10, 11, 9, 8);  // create a new CD74HC4067 object with its four control pins
+const int muxMapping[16] = {8, 9, 10, 11, 12, 13, 14, 15, 7, 6, 5, 4, 3, 2, 1, 0};
+const int mux_common_pin = 29; // select a pin to share with the 16 channels of the CD74HC4067
+
+//TR-09 - tune/levels
+int usbCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
+int trsCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
+
+//	int usbCCs[16] = {20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
+//	int trsCCs[16] = {20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
+//	int trsCCs[16] = {14,16,19,20,21,24,26,28,42,43,44,53,54,30,31,33}; // NTS-1 (ish)
+
+
+int ccBanks[numBanks][2][numKnobs];
+
+// DEVICE INFO FOR ADAFRUIT M0 or M4 
+char mfgstr[32] = "denki-oto";
+char prodstr[32] = "hachi-ni";
+
+void setup() {
+	TinyUSBDevice.setManufacturerDescriptor(mfgstr);
+	TinyUSBDevice.setProductDescriptor(prodstr);
+
+	pinMode(buttons[0], INPUT_PULLUP);
+	pinMode(buttons[1], INPUT_PULLUP);
+	pinMode(mux_common_pin, INPUT);
+	pinMode(TXLED, OUTPUT); // TX
+	pinMode(REDLED, OUTPUT);	// RED LED
+	pinMode(NEOPWRPIN, OUTPUT); // NEOPWR Pin
+	digitalWrite(NEOPWRPIN, HIGH);	// Turn NEOPWR ON
+
+	LittleFS.begin();
+
+// 	Serial1.setRX(midi_rx_pin);
+//  Serial1.setTX(midi_tx_pin);
+    
+	// Initialize MIDI, and listen to all MIDI channels
+	USBMIDI.begin(MIDI_CHANNEL_OMNI);
+	HWMIDI.begin(MIDI_CHANNEL_OMNI);
+	USBMIDI.turnThruOff();
+	HWMIDI.turnThruOff();
+
+	// handlers for receiving MIDI messages.
+	USBMIDI.setHandleNoteOn(sendNoteOn);
+	USBMIDI.setHandleNoteOff(sendNoteOff);
+	HWMIDI.setHandleNoteOn(sendNoteOn);
+	HWMIDI.setHandleNoteOff(sendNoteOff);
+	USBMIDI.setHandleControlChange(sendControlChange);
+	HWMIDI.setHandleControlChange(sendControlChange);
+	USBMIDI.setHandleProgramChange(sendProgramChange);
+	HWMIDI.setHandleProgramChange(sendProgramChange);
+	
+	Serial.begin(115200);
+	
+	for (int i = 0; i < channelCount; i++)
+	{
+		analog[i] = new ResponsiveAnalogRead(mux_common_pin, true);
+	}
+	
+	// wait until device mounted
+//	   while( !TinyUSBDevice.mounted() ) delay(1);
+	if (!TinyUSBDevice.mounted()){
+		delay(1000);
+	}
+
+	Serial.println("MIDI Test");
+	
+	initCCbanks();
+	config_read();
+    config_load(0);
+    
+
+	pixels.begin();				  // Start the NeoPixel object
+	pixels.clear();				  // Set NeoPixel color to black (0,0,0)
+	pixels.setBrightness(50);	  // Affects all subsequent settings
+
+	rainbow(2); 
+	pixels.setPixelColor(0, 0, 20, 20);
+	pixels.show();
+
+}
+
+void loop()
+{
+	activity = false;
+	bool button0Temp = digitalRead(buttons[0]);
+	bool button1Temp = digitalRead(buttons[1]);
+	
+	if (buttonState[0] != button0Temp){
+		buttonState[0] = button0Temp;
+		if (buttonState[0]){
+		config_write();
+		}
+// 		Serial.println(buttonState[0]);
+	}
+	if (buttonState[1] != button1Temp){
+		buttonState[1] = button1Temp;
+// 		Serial.println(buttonState[1]);
+	}
+
+
+	for (int i = 0; i < 16; i++) {
+		int temp;
+		my_mux.channel(muxMapping[i]);
+
+		temp = analogRead(mux_common_pin); // mux goes into g_common_pin // sensorValue = analogRead(g_common_pin);
+		analog[i]->update(temp);
+		if(analog[i]->hasChanged()) {
+			temp = analog[i]->getValue();
+			temp = constrain(temp, faderMin, faderMax);
+			temp = map(temp, faderMin, faderMax, 1024, 0); // flip the value for backwards pots
+			
+			shiftyTemp = temp >> 3;
+			int tempR = 0;
+			int tempB = 0;
+			int tempG = 0; 
+			if (i < 8) {
+				tempG = shiftyTemp*2;
+				pixels.setPixelColor(i+1, tempR, tempG, tempB);
+			} else {
+				tempG = shiftyTemp; 
+				tempB = shiftyTemp*2;
+				pixels.setPixelColor(i-7, tempR, tempG, tempB);
+			}
+			
+			
+			// send the message over USB and physical MIDI
+			USBMIDI.sendControlChange(usbCCs[i], shiftyTemp, 1);
+			HWMIDI.sendControlChange(trsCCs[i], shiftyTemp, 1);
+
+//			Serial.print(i);
+//			Serial.print(": ");
+//			Serial.println(shiftyTemp);
+		}
+		pixels.show();
+	}
+	
+	// READ HARDWARE MIDI
+	if (HWMIDI.read()) {
+		// get a MIDI IN (Serial) message
+		midi::MidiType type = HWMIDI.getType();
+		byte channel = HWMIDI.getChannel();
+		byte data1 = HWMIDI.getData1();
+		byte data2 = HWMIDI.getData2();
+
+		if (type == midi::Clock) {
+			// no led activity on clock
+			//Serial.println("clock");
+			activity = false;
+//			   ledOnMillis = 0;
+		} else {
+			activity = true;
+		}
+
+		// send the message to USB MIDI 
+		if (type != midi::SystemExclusive) {
+			// Normal messages, simply give the data to the USBMIDI.send()
+			USBMIDI.send(type, data1, data2, channel);
+		} else {
+			// SysEx messages are special.	The message length is given in data1 & data2
+			unsigned int SysExLength = data1 + data2 * 256;
+			//USBMIDI.sendSysEx(SysExLength, MIDI.getSysExArray(), true, 0);
+		}
+	}
+	// READ USBMIDI
+	while(usb_midi.available()){
+		if (USBMIDI.read()) {
+			// get the USB MIDI message	 (except SysEX)
+			midi::MidiType type = USBMIDI.getType();
+			byte channel = USBMIDI.getChannel();
+			byte data1 = USBMIDI.getData1();
+			byte data2 = USBMIDI.getData2();
+		
+			if (type == midi::Clock) {
+				// no led activity on clock
+				activity = false;
+//				   ledOnMillis = 0;
+			} else {
+				activity = true;
+			}
+
+			// send this message to Serial MIDI OUT
+			if (type != midi::SystemExclusive) {
+				// Normal messages, first we must convert MIDI2's type (an ordinary
+				// byte) to the MIDI library's special MidiType.
+				midi::MidiType mtype = (midi::MidiType)type;
+
+				// Then simply give the data to the MIDI library send()
+				HWMIDI.send(mtype, data1, data2, channel);
+			
+			} else {
+				// SysEx messages are special.	The message length is given in data1 & data2
+				unsigned int SysExLength = data1 + data2 * 256;
+				//HWMIDI.sendSysEx(SysExLength, USBMIDI.getSysExArray(), true);
+			}
+		}
+	}
+
+}
+
+void handleNoteOn(byte note, byte velocity, byte channel);
+void handleNoteOff(byte note, byte velocity, byte channel);
+void handleControlChange(byte control, byte value, byte channel);
+void handleProgramChange(byte program, byte channel);
+void handleSystemExclusive(uint32_t length, const uint8_t *sysexData, bool hasBeginEnd);
+void handleClock(void);
+void handleStart(void);
+void handleContinue(void);
+void handleStop(void);
+
+void sendNoteOn(byte note, byte velocity, byte channel) {
+	USBMIDI.sendNoteOn(note, velocity, channel);
+	HWMIDI.sendNoteOn(note, velocity, channel);
+}
+
+void sendNoteOff(byte note, byte velocity, byte channel) {
+	USBMIDI.sendNoteOff(note, velocity, channel);
+	HWMIDI.sendNoteOff(note, velocity, channel);
+}
+
+void sendControlChange(byte control, byte value, byte channel) {
+	USBMIDI.sendControlChange(control, value, channel);
+	HWMIDI.sendControlChange(control, value, channel);
+}
+
+void sendProgramChange(byte program, byte channel) {
+	USBMIDI.sendProgramChange(program, channel);
+	HWMIDI.sendProgramChange(program, channel);
+}
+
+void sendSysEx(uint32_t length, const uint8_t *sysexData, bool hasBeginEnd) {
+	USBMIDI.sendSysEx(length, sysexData, hasBeginEnd);
+}
+
+void sendClock() {
+	USBMIDI.sendClock();
+	HWMIDI.sendClock();
+}
+
+void startClock(){
+	USBMIDI.sendStart();
+	HWMIDI.sendStart();
+}
+
+void continueClock(){
+	USBMIDI.sendContinue();
+	HWMIDI.sendContinue();
+}
+
+void stopClock(){
+	USBMIDI.sendStop();
+	HWMIDI.sendStop();
+}
+
+// write all sequences to "disk"
+void config_write() {
+    Serial.println("config_write");
+    DynamicJsonDocument doc(8192); // assistant said 6144
+    for( int j=0; j < numBanks; j++ ) {
+        JsonArray config_array = doc.createNestedArray();
+        for( int q = 0; q < 2; q++) {
+			JsonArray step_array = config_array.createNestedArray();
+			for( int i=0; i< numKnobs; i++ ) {
+				step_array.add(ccBanks[j][q][i]);
+	//             Step s = sequences[j][i];
+	//             step_array.add( s.note );
+	//             step_array.add( s.vel );
+	//             step_array.add( s.gate );
+	//             step_array.add( s.on );
+			}
+        }
+    }
+
+    LittleFS.remove( save_file );
+    File file = LittleFS.open( save_file, "w");
+    if( !file ) {
+        Serial.println("config_write: Failed to create file");
+        return;
+    }
+    if(serializeJson(doc, file) == 0) {
+        Serial.println(F("config_write: Failed to write to file"));
+    }
+    file.close();
+    serializeJson(doc, Serial);
+}
+
+// read all sequences from "disk"
+void config_read() {
+    Serial.println("config_read");
+
+    File f = LittleFS.open( save_file, "r");
+    String s = f.readStringUntil('\n');
+    f.close();
+    Serial.println("  contents:"); Serial.println(s);
+
+    File file = LittleFS.open( save_file, "r");
+    if( !file ) {
+        Serial.println("config_read: no config file, creating one");
+        config_write();
+        return;
+    }
+
+    DynamicJsonDocument doc(8192); // assistant said 6144
+    DeserializationError error = deserializeJson(doc, file); // inputLength);
+    if(error) {
+        Serial.print("config_read: deserialize failed: ");
+        Serial.println(error.c_str());
+        return;
+    }
+
+    for( int j=0; j < numBanks; j++ ) {
+        JsonArray config_array = doc[j];
+        for( int q = 0; q < 2; q++) {
+			JsonArray step_array = config_array[q];
+			for( int i=0; i< numKnobs; i++ ) {
+
+	//             Step s;
+	//             s.note = step_array[0];
+	//             s.vel  = step_array[1];
+	//             s.gate = step_array[2];
+	//             s.on   = step_array[3];
+	//             sequences[j][i] = s;
+			}
+        }
+        Serial.println(" ");
+    }
+    file.close();
+}
+
+// Load a single config
+void config_load(int config_num) {
+    Serial.printf("config_load:%d\n", config_num);
+    for( int i=0; i< numKnobs; i++) {
+//         seqr.steps[i] = sequences[config_num][i];
+    }
+//     seqr.seqno = config_num;
+}
+
+// Store current config to  storage
+void config_save(int config_num) {
+    Serial.printf("config_save:%d\n", config_num);
+    for( int i=0; i< numKnobs; i++) {
+//         sequences[config_num][i] = seqr.steps[i];
+    }
+}
+
+// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
+void rainbow(int wait) {
+  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
+	// strip.rainbow() can take a single argument (first pixel hue) or
+	// optionally a few extras: number of rainbow repetitions (default 1),
+	// saturation and value (brightness) (both 0-255, similar to the
+	// ColorHSV() function, default 255), and a true/false flag for whether
+	// to apply gamma correction to provide 'truer' colors (default true).
+	pixels.rainbow(firstPixelHue);
+	// Above line is equivalent to:
+	// strip.rainbow(firstPixelHue, 1, 255, 255, true);
+	pixels.show(); // Update strip with new contents
+	delay(wait);  // Pause for a moment
+  }
+}
+
+void initCCbanks(){
+// 	ccBanks[numBanks][2][numKnobs] = {
+    for (int i = 0; i < numBanks; i++){
+		for( int q = 0; q < 2; q++) {
+			for( int k = 0; k < numKnobs; k++) {
+				ccBanks[i][q][k] = k;
+			}
+		}
+	}
+
+}
