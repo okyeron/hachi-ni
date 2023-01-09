@@ -76,8 +76,10 @@ int trsCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
 
 class bank {
 	public:
-	    int usbBank[16];
-    	int trsBank[16];
+    	int usbChannel[16];
+	    int trsChannel[16];
+	    int usbCC[16];
+    	int trsCC[16];
 
 		bank() {
 			fillRange(0,0);
@@ -85,8 +87,8 @@ class bank {
 
 		void fillRange(int usbStart, int trsStart) {
 			for(int i=0; i < 16; i++) {
-				usbBank[i] = i + usbStart;
-				trsBank[i] = i + trsStart;
+				usbCC[i] = i + usbStart;
+				trsCC[i] = i + trsStart;
 			}
 		}
 };
@@ -336,16 +338,20 @@ void stopClock(){
 // write all sequences to "disk"
 void config_write() {
     Serial.println("config_write");
-    DynamicJsonDocument doc(8192); // assistant said 6144
+    DynamicJsonDocument doc(12672); // assistant said 12672
     for( int j=0; j < numBanks; j++ ) {
-        JsonArray config_array = doc.createNestedArray();
-			JsonArray step_array = config_array.createNestedArray();
+        JsonArray banks = doc.createNestedArray();
+			JsonArray usb = banks.createNestedArray();
 			for( int i=0; i< numKnobs; i++ ) {
-				step_array.add(ccBanks[j].usbBank[i]);
+				JsonArray usbdata = usb.createNestedArray();
+				usbdata.add(ccBanks[j].usbCC[i]);
+				usbdata.add(ccBanks[j].usbChannel[i]);
 			}
-			JsonArray step_array2 = config_array.createNestedArray();
+			JsonArray trs = banks.createNestedArray();
 			for( int i=0; i< numKnobs; i++ ) {
-				step_array2.add(ccBanks[j].trsBank[i]);
+				JsonArray trsdata = trs.createNestedArray();
+				trsdata.add(ccBanks[j].trsCC[i]);
+				trsdata.add(ccBanks[j].trsChannel[i]);
 			}
     }
 
@@ -378,7 +384,7 @@ void config_read() {
         return;
     }
 
-    DynamicJsonDocument doc(8192); // assistant said 6144
+    DynamicJsonDocument doc(12672); // assistant said 12672
     DeserializationError error = deserializeJson(doc, file); // inputLength);
     if(error) {
         Serial.print("config_read: deserialize failed: ");
@@ -387,21 +393,18 @@ void config_read() {
     }
 
     for( int j=0; j < numBanks; j++ ) {
-        JsonArray config_array = doc[j];
-        for( int q = 0; q < 2; q++) {
-			JsonArray step_array = config_array[q];
-			for( int i=0; i< numKnobs; i++ ) {
+        JsonArray bank = doc[j];
+		JsonArray usb = bank[0];
+		JsonArray trs = bank[1];
+		for( int i=0; i< numKnobs; i++ ) {
+			// usbCC[i]
+			// usbChannel[i]
+			// trsCC[i]
+			// trsChannel[i]
 
-	//             Step s;
-	//             s.note = step_array[0];
-	//             s.vel  = step_array[1];
-	//             s.gate = step_array[2];
-	//             s.on   = step_array[3];
-	//             sequences[j][i] = s;
-			}
-        }
+		}
+	}
         Serial.println(" ");
-    }
     file.close();
 }
 
