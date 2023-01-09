@@ -21,6 +21,7 @@
 #include <CD74HC4067.h>
 #include <ResponsiveAnalogRead.h>
 #include <LittleFS.h>
+#include <vector>
 
 // #include "Adafruit_SPIFlash.h"
 // #include "SdFat.h"
@@ -73,8 +74,25 @@ int trsCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
 //	int trsCCs[16] = {20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
 //	int trsCCs[16] = {14,16,19,20,21,24,26,28,42,43,44,53,54,30,31,33}; // NTS-1 (ish)
 
+class bank {
+	public:
+	    int usbBank[16];
+    	int trsBank[16];
 
-int ccBanks[numBanks][2][numKnobs];
+		bank() {
+			fillRange(0,0);
+		}
+
+		void fillRange(int usbStart, int trsStart) {
+			for(int i=0; i < 16; i++) {
+				usbBank[i] = i + usbStart;
+				trsBank[i] = i + trsStart;
+			}
+		}
+};
+
+// int ccBanks[numBanks][2][numKnobs];
+bank ccBanks[16];
 
 // DEVICE INFO FOR ADAFRUIT M0 or M4 
 char mfgstr[32] = "denki-oto";
@@ -321,17 +339,14 @@ void config_write() {
     DynamicJsonDocument doc(8192); // assistant said 6144
     for( int j=0; j < numBanks; j++ ) {
         JsonArray config_array = doc.createNestedArray();
-        for( int q = 0; q < 2; q++) {
 			JsonArray step_array = config_array.createNestedArray();
 			for( int i=0; i< numKnobs; i++ ) {
-				step_array.add(ccBanks[j][q][i]);
-	//             Step s = sequences[j][i];
-	//             step_array.add( s.note );
-	//             step_array.add( s.vel );
-	//             step_array.add( s.gate );
-	//             step_array.add( s.on );
+				step_array.add(ccBanks[j].usbBank[i]);
 			}
-        }
+			JsonArray step_array2 = config_array.createNestedArray();
+			for( int i=0; i< numKnobs; i++ ) {
+				step_array2.add(ccBanks[j].trsBank[i]);
+			}
     }
 
     LittleFS.remove( save_file );
@@ -425,12 +440,13 @@ void rainbow(int wait) {
 
 void initCCbanks(){
 // 	ccBanks[numBanks][2][numKnobs] = {
-    for (int i = 0; i < numBanks; i++){
-		for( int q = 0; q < 2; q++) {
-			for( int k = 0; k < numKnobs; k++) {
-				ccBanks[i][q][k] = k;
-			}
-		}
-	}
+    // for (int i = 0; i < numBanks; i++){
+	// 	for( int q = 0; q < 2; q++) {
+	// 		for( int k = 0; k < numKnobs; k++) {
+	// 			ccBanks[i][q][k] = k;
+	// 		}
+	// 	}
+	// }
+	ccBanks[0].fillRange(32,64);
 
 }

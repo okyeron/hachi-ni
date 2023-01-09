@@ -15,4 +15,4 @@ Power
 Hacking
 * RP2040 processor
 * STEMMA-QT connector (i2c)
-* Breakout connectors for 3 analog and 3 digital pins
+* Breakout connections for 3 analog (A0, A1, A2) and 3 digital pins (D4, D11, D12)
