@@ -21,7 +21,8 @@
 #include <CD74HC4067.h>
 #include <ResponsiveAnalogRead.h>
 #include <LittleFS.h>
-#include <vector>
+#include <avdweb_Switch.h>
+
 
 // #include "Adafruit_SPIFlash.h"
 // #include "SdFat.h"
@@ -39,7 +40,11 @@ const int numKnobs = 16;
 const int numBanks = 8;
 const int buttons[2] = {25,24};
 int buttonState[2] = {0,0};
-	
+
+//Switch(byte _pin, byte PinMode=INPUT_PULLUP, bool polarity=LOW, int debouncePeriod=50, int longPressPeriod=300, int doubleClickPeriod=250, int deglitchPeriod=10);
+Switch leftButton = Switch(buttons[0], INPUT_PULLUP, LOW, 1, 450, 350);
+Switch rightButton = Switch(buttons[1], INPUT_PULLUP, LOW, 1, 450, 350);
+
 
 int faderMin = 0;
 int faderMax = 1019;
@@ -94,7 +99,28 @@ class bank {
 };
 
 // int ccBanks[numBanks][2][numKnobs];
+// ccBanks[x].trsCC[y])
 bank ccBanks[16];
+int activeBank = 0;
+
+// Button callbacks
+
+void leftButtonCallback(void* s) {
+//   Serial.print("Left: ");
+//   Serial.println((char*)s);
+	activeBank--;
+  	activeBank = constrain(activeBank, 0, numBanks);
+	// Serial.println(activeBank);
+}
+
+void rightButtonCallback(void* s) {
+//   Serial.print("Right: ");
+//   Serial.println((char*)s);
+	activeBank++;
+  	activeBank = constrain(activeBank, 0, numBanks);
+	// Serial.println(activeBank);
+}
+
 
 // DEVICE INFO FOR ADAFRUIT M0 or M4 
 char mfgstr[32] = "denki-oto";
@@ -104,8 +130,8 @@ void setup() {
 	TinyUSBDevice.setManufacturerDescriptor(mfgstr);
 	TinyUSBDevice.setProductDescriptor(prodstr);
 
-	pinMode(buttons[0], INPUT_PULLUP);
-	pinMode(buttons[1], INPUT_PULLUP);
+	// pinMode(buttons[0], INPUT_PULLUP);
+	// pinMode(buttons[1], INPUT_PULLUP);
 	pinMode(mux_common_pin, INPUT);
 	pinMode(TXLED, OUTPUT); // TX
 	pinMode(REDLED, OUTPUT);	// RED LED
@@ -148,6 +174,16 @@ void setup() {
 
 	Serial.println("MIDI Test");
 	
+	// Button setup
+	// leftButton.setPushedCallback(&leftButtonCallback, (void*)"turned on");
+	// leftButton.setReleasedCallback(&leftButtonCallback, (void*)"turned off");
+  	leftButton.setSingleClickCallback(&leftButtonCallback, (void*)"left single click");
+
+	// rightButton.setLongPressCallback(&rightButtonCallback, (void*)"long press");
+  	// rightButton.setDoubleClickCallback(&rightButtonCallback, (void*)"double click");
+  	rightButton.setSingleClickCallback(&rightButtonCallback, (void*)"right single click");
+
+
 	initCCbanks();
 	config_read();
     config_load(0);
@@ -166,20 +202,25 @@ void setup() {
 void loop()
 {
 	activity = false;
-	bool button0Temp = digitalRead(buttons[0]);
-	bool button1Temp = digitalRead(buttons[1]);
+	// bool button0Temp = digitalRead(buttons[0]);
+	// bool button1Temp = digitalRead(buttons[1]);
+	leftButton.poll();
+	rightButton.poll();
 	
-	if (buttonState[0] != button0Temp){
-		buttonState[0] = button0Temp;
-		if (buttonState[0]){
-		config_write();
-		}
-// 		Serial.println(buttonState[0]);
-	}
-	if (buttonState[1] != button1Temp){
-		buttonState[1] = button1Temp;
-// 		Serial.println(buttonState[1]);
-	}
+// 	if (buttonState[0] != button0Temp){
+// 		if (buttonState[0]){
+// 			config_write();
+// 		}
+// 		buttonState[0] = button0Temp;
+// // 		Serial.println(buttonState[0]);
+// 	}
+// 	if (buttonState[1] != button1Temp){
+// 		if (buttonState[1]){
+// 			printCCBanks();
+// 		}
+// 		buttonState[1] = button1Temp;
+// // 		Serial.println(buttonState[1]);
+// 	}
 
 
 	for (int i = 0; i < 16; i++) {
@@ -208,12 +249,14 @@ void loop()
 			
 			
 			// send the message over USB and physical MIDI
-			USBMIDI.sendControlChange(usbCCs[i], shiftyTemp, 1);
-			HWMIDI.sendControlChange(trsCCs[i], shiftyTemp, 1);
+			USBMIDI.sendControlChange(ccBanks[activeBank].usbCC[i], shiftyTemp, ccBanks[activeBank].usbChannel[i]+1);
+			HWMIDI.sendControlChange(ccBanks[activeBank].trsCC[i], shiftyTemp, ccBanks[activeBank].trsChannel[i]+1);
 
-//			Serial.print(i);
-//			Serial.print(": ");
-//			Serial.println(shiftyTemp);
+			// Serial.print(i);
+			// Serial.print(": ");
+			// Serial.print(ccBanks[activeBank].usbCC[i]);
+			// Serial.print(": ");
+			// Serial.println(shiftyTemp);
 		}
 		pixels.show();
 	}
@@ -335,7 +378,7 @@ void stopClock(){
 	HWMIDI.sendStop();
 }
 
-// write all sequences to "disk"
+// Write all CC settings to memory
 void config_write() {
     Serial.println("config_write");
     DynamicJsonDocument doc(12672); // assistant said 12672
@@ -368,7 +411,7 @@ void config_write() {
     serializeJson(doc, Serial);
 }
 
-// read all sequences from "disk"
+// Read all CC settings to memory
 void config_read() {
     Serial.println("config_read");
 
@@ -397,14 +440,22 @@ void config_read() {
 		JsonArray usb = bank[0];
 		JsonArray trs = bank[1];
 		for( int i=0; i< numKnobs; i++ ) {
+			// Serial.print(j);
+			// Serial.print(":usb:");
+			// Serial.print(i);
+			// Serial.print(":");
+			// Serial.println(usb[i][0].as<int>());
+			ccBanks[j].usbCC[i] = usb[i][0].as<int>();
+			ccBanks[j].usbChannel[i] = usb[i][1].as<int>();
+			ccBanks[j].trsCC[i] = trs[i][0].as<int>();
+			ccBanks[j].trsChannel[i] = trs[i][1].as<int>();
 			// usbCC[i]
 			// usbChannel[i]
 			// trsCC[i]
 			// trsChannel[i]
-
 		}
 	}
-        Serial.println(" ");
+        // Serial.println(" ");
     file.close();
 }
 
@@ -417,7 +468,7 @@ void config_load(int config_num) {
 //     seqr.seqno = config_num;
 }
 
-// Store current config to  storage
+// Store current config to storage
 void config_save(int config_num) {
     Serial.printf("config_save:%d\n", config_num);
     for( int i=0; i< numKnobs; i++) {
@@ -442,14 +493,18 @@ void rainbow(int wait) {
 }
 
 void initCCbanks(){
-// 	ccBanks[numBanks][2][numKnobs] = {
-    // for (int i = 0; i < numBanks; i++){
-	// 	for( int q = 0; q < 2; q++) {
-	// 		for( int k = 0; k < numKnobs; k++) {
-	// 			ccBanks[i][q][k] = k;
-	// 		}
-	// 	}
-	// }
 	ccBanks[0].fillRange(32,64);
+}
+
+void printCCBanks(){
+ for( int j=0; j < numBanks; j++ ) {
+ 		for( int i=0; i< numKnobs; i++ ) {
+			Serial.print(j);
+			Serial.print(":trs:");
+			Serial.print(i);
+			Serial.print(":");
+			Serial.println(ccBanks[j].trsCC[i]);
+		}
+ }
 
 }
