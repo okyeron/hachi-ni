@@ -34,6 +34,7 @@ const int RXLED = 1;
 const int REDLED = 14;
 const int NEOPIXPIN = 16;
 const int NEOPWRPIN = 17;
+const int numLEDS = 9;
 
 const int channelCount = 16;
 const int numKnobs = 16;
@@ -109,7 +110,10 @@ void leftButtonCallback(void* s) {
 //   Serial.print("Left: ");
 //   Serial.println((char*)s);
 	activeBank--;
-  	activeBank = constrain(activeBank, 0, numBanks);
+  	activeBank = constrain(activeBank, 0, numBanks-1);
+	pixelsOff();
+	pixels.setPixelColor(activeBank+1, 128, 0, 0); // bank pixels are 1-8 not 0-7
+	pixels.show();
 	// Serial.println(activeBank);
 }
 
@@ -117,7 +121,10 @@ void rightButtonCallback(void* s) {
 //   Serial.print("Right: ");
 //   Serial.println((char*)s);
 	activeBank++;
-  	activeBank = constrain(activeBank, 0, numBanks);
+  	activeBank = constrain(activeBank, 0, numBanks-1);
+	pixelsOff();
+	pixels.setPixelColor(activeBank+1, 128, 0, 0);
+	pixels.show();
 	// Serial.println(activeBank);
 }
 
@@ -476,6 +483,11 @@ void config_save(int config_num) {
     }
 }
 
+void pixelsOff(){
+	for( int i=0; i< numLEDS; i++) {
+		pixels.setPixelColor(i, 0, 0, 0);
+	}
+}
 // Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
 void rainbow(int wait) {
   for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
