@@ -23,40 +23,16 @@
 #include <LittleFS.h>
 #include <avdweb_Switch.h>
 
+#include "config.h"
 
-// #include "Adafruit_SPIFlash.h"
-// #include "SdFat.h"
-
-// #include <elapsedMillis.h>
-
-const int TXLED = 0;
-const int RXLED = 1;
-const int REDLED = 14;
-const int NEOPIXPIN = 16;
-const int NEOPWRPIN = 17;
-const int numLEDS = 9;
-
-const int channelCount = 16;
-const int numKnobs = 16;
-const int numBanks = 8;
-const int buttons[2] = {25,24};
-int buttonState[2] = {0,0};
 
 //Switch(byte _pin, byte PinMode=INPUT_PULLUP, bool polarity=LOW, int debouncePeriod=50, int longPressPeriod=300, int doubleClickPeriod=250, int deglitchPeriod=10);
 Switch leftButton = Switch(buttons[0], INPUT_PULLUP, LOW, 1, 450, 350);
 Switch rightButton = Switch(buttons[1], INPUT_PULLUP, LOW, 1, 450, 350);
 
 
-int faderMin = 0;
-int faderMax = 1019;
-int shiftyTemp;
-bool activity = true;
-
-const char* save_file = "/saved_configs.json";
-
 // USB MIDI object
 Adafruit_USBD_MIDI usb_midi;
-
 // Create USB and Hardware MIDI interfaces
 MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, USBMIDI);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, HWMIDI);
@@ -68,18 +44,17 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(9, NEOPIXPIN, NEO_GRB + NEO_KHZ800)
 ResponsiveAnalogRead *analog[channelCount];
 
 // MUX SETUP
-CD74HC4067 my_mux(10, 11, 9, 8);  // create a new CD74HC4067 object with its four control pins
-const int muxMapping[16] = {8, 9, 10, 11, 12, 13, 14, 15, 7, 6, 5, 4, 3, 2, 1, 0};
-const int mux_common_pin = 29; // select a pin to share with the 16 channels of the CD74HC4067
+CD74HC4067 my_mux(mux1, mux2, mux3, mux4);  // create a new CD74HC4067 object with its four control pins
 
 //TR-09 - tune/levels
-int usbCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
-int trsCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
+// int usbCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
+// int trsCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
 
 //	int usbCCs[16] = {20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
 //	int trsCCs[16] = {20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
 //	int trsCCs[16] = {14,16,19,20,21,24,26,28,42,43,44,53,54,30,31,33}; // NTS-1 (ish)
 
+// CC Banks
 class bank {
 	public:
     	int usbChannel[16];
@@ -99,13 +74,13 @@ class bank {
 		}
 };
 
-// int ccBanks[numBanks][2][numKnobs];
 // ccBanks[x].trsCC[y])
+// ccBanks[x].trsChannel[y])
 bank ccBanks[16];
 int activeBank = 0;
 
-// Button callbacks
 
+// Button callbacks
 void leftButtonCallback(void* s) {
 //   Serial.print("Left: ");
 //   Serial.println((char*)s);
@@ -114,7 +89,7 @@ void leftButtonCallback(void* s) {
 	pixelsOff();
 	pixels.setPixelColor(activeBank+1, 128, 0, 0); // bank pixels are 1-8 not 0-7
 	pixels.show();
-	// Serial.println(activeBank);
+	Serial.println(activeBank);
 }
 
 void rightButtonCallback(void* s) {
@@ -125,14 +100,15 @@ void rightButtonCallback(void* s) {
 	pixelsOff();
 	pixels.setPixelColor(activeBank+1, 128, 0, 0);
 	pixels.show();
-	// Serial.println(activeBank);
+	Serial.println(activeBank);
 }
 
 
-// DEVICE INFO FOR ADAFRUIT M0 or M4 
+// USB DEVICE INFO 
 char mfgstr[32] = "denki-oto";
 char prodstr[32] = "hachi-ni";
 
+// *** SETUP ****
 void setup() {
 	TinyUSBDevice.setManufacturerDescriptor(mfgstr);
 	TinyUSBDevice.setProductDescriptor(prodstr);
@@ -144,6 +120,7 @@ void setup() {
 	pinMode(REDLED, OUTPUT);	// RED LED
 	pinMode(NEOPWRPIN, OUTPUT); // NEOPWR Pin
 	digitalWrite(NEOPWRPIN, HIGH);	// Turn NEOPWR ON
+
 
 	LittleFS.begin();
 
@@ -165,7 +142,9 @@ void setup() {
 	HWMIDI.setHandleControlChange(sendControlChange);
 	USBMIDI.setHandleProgramChange(sendProgramChange);
 	HWMIDI.setHandleProgramChange(sendProgramChange);
-	
+	USBMIDI.setHandleSystemExclusive(OnSysEx);
+
+
 	Serial.begin(115200);
 	
 	for (int i = 0; i < channelCount; i++)
@@ -204,8 +183,10 @@ void setup() {
 	pixels.setPixelColor(0, 0, 20, 20);
 	pixels.show();
 
-}
+}	
+// END SETUP
 
+// *** MAIN LOOP ****
 void loop()
 {
 	activity = false;
@@ -214,21 +195,6 @@ void loop()
 	leftButton.poll();
 	rightButton.poll();
 	
-// 	if (buttonState[0] != button0Temp){
-// 		if (buttonState[0]){
-// 			config_write();
-// 		}
-// 		buttonState[0] = button0Temp;
-// // 		Serial.println(buttonState[0]);
-// 	}
-// 	if (buttonState[1] != button1Temp){
-// 		if (buttonState[1]){
-// 			printCCBanks();
-// 		}
-// 		buttonState[1] = button1Temp;
-// // 		Serial.println(buttonState[1]);
-// 	}
-
 
 	for (int i = 0; i < 16; i++) {
 		int temp;
@@ -265,104 +231,123 @@ void loop()
 			// Serial.print(": ");
 			// Serial.println(shiftyTemp);
 		}
-		pixels.show();
+		// pixels.show();
 	}
 	
 	// READ HARDWARE MIDI
-	if (HWMIDI.read()) {
-		// get a MIDI IN (Serial) message
-		midi::MidiType type = HWMIDI.getType();
-		byte channel = HWMIDI.getChannel();
-		byte data1 = HWMIDI.getData1();
-		byte data2 = HWMIDI.getData2();
-
-		if (type == midi::Clock) {
-			// no led activity on clock
-			//Serial.println("clock");
-			activity = false;
-//			   ledOnMillis = 0;
-		} else {
-			activity = true;
-		}
-
-		// send the message to USB MIDI 
-		if (type != midi::SystemExclusive) {
-			// Normal messages, simply give the data to the USBMIDI.send()
-			USBMIDI.send(type, data1, data2, channel);
-		} else {
-			// SysEx messages are special.	The message length is given in data1 & data2
-			unsigned int SysExLength = data1 + data2 * 256;
-			//USBMIDI.sendSysEx(SysExLength, MIDI.getSysExArray(), true, 0);
-		}
+	while (HWMIDI.read()) {
 	}
 	// READ USBMIDI
-	while(usb_midi.available()){
-		if (USBMIDI.read()) {
-			// get the USB MIDI message	 (except SysEX)
-			midi::MidiType type = USBMIDI.getType();
-			byte channel = USBMIDI.getChannel();
-			byte data1 = USBMIDI.getData1();
-			byte data2 = USBMIDI.getData2();
-		
-			if (type == midi::Clock) {
-				// no led activity on clock
-				activity = false;
-//				   ledOnMillis = 0;
-			} else {
-				activity = true;
-			}
-
-			// send this message to Serial MIDI OUT
-			if (type != midi::SystemExclusive) {
-				// Normal messages, first we must convert MIDI2's type (an ordinary
-				// byte) to the MIDI library's special MidiType.
-				midi::MidiType mtype = (midi::MidiType)type;
-
-				// Then simply give the data to the MIDI library send()
-				HWMIDI.send(mtype, data1, data2, channel);
-			
-			} else {
-				// SysEx messages are special.	The message length is given in data1 & data2
-				unsigned int SysExLength = data1 + data2 * 256;
-				//HWMIDI.sendSysEx(SysExLength, USBMIDI.getSysExArray(), true);
-			}
-		}
+	while (USBMIDI.read()) {
 	}
 
-}
+// 	while (HWMIDI.read()) {
+// 		// get a MIDI IN (Serial) message
+// 		midi::MidiType type = HWMIDI.getType();
+// 		byte channel = HWMIDI.getChannel();
+// 		byte data1 = HWMIDI.getData1();
+// 		byte data2 = HWMIDI.getData2();
+// 
+// 		if (type == midi::Clock) {
+// 			// no led activity on clock
+// 			//Serial.println("clock");
+// 			activity = false;
+// //			   ledOnMillis = 0;
+// 		} else {
+// 			activity = true;
+// 		}
+// 
+// 		// send the message to USB MIDI 
+// 		if (type != midi::SystemExclusive) {
+// 			// Normal messages, simply give the data to the USBMIDI.send()
+// 			Serial.print(type);
+// 			Serial.print(":");
+// 			Serial.print(data1);
+// 			Serial.print(":");
+// 			Serial.print(data2);
+// 			Serial.print(":");
+// 			Serial.println(channel);
+// 			USBMIDI.send(type, data1, data2, channel);
+// 		} else {
+// 			// SysEx messages are special.	The message length is given in data1 & data2
+// 			unsigned int SysExLength = data1 + data2 * 256;
+// 			//USBMIDI.sendSysEx(SysExLength, MIDI.getSysExArray(), true, 0);
+// 		}
+// 	}
+// 	// READ USBMIDI
+// 	while(usb_midi.available()){
+// 		if (USBMIDI.read()) {
+// 			// get the USB MIDI message	 (except SysEX)
+// 			midi::MidiType type = USBMIDI.getType();
+// 			byte channel = USBMIDI.getChannel();
+// 			byte data1 = USBMIDI.getData1();
+// 			byte data2 = USBMIDI.getData2();
+// 		
+// 			if (type == midi::Clock) {
+// 				// no led activity on clock
+// 				activity = false;
+// //				   ledOnMillis = 0;
+// 			} else {
+// 				activity = true;
+// 			}
+// 
+// 			// send this message to Serial MIDI OUT
+// 			if (type != midi::SystemExclusive) {
+// 				// Normal messages, first we must convert MIDI2's type (an ordinary
+// 				// byte) to the MIDI library's special MidiType.
+// 				midi::MidiType mtype = (midi::MidiType)type;
+// 
+// 				// Then simply give the data to the MIDI library send()
+// 				HWMIDI.send(mtype, data1, data2, channel);
+// 			
+// 			} else {
+// 				// SysEx messages are special.	The message length is given in data1 & data2
+// 				unsigned int SysExLength = data1 + data2 * 256;
+// 				//HWMIDI.sendSysEx(SysExLength, USBMIDI.getSysExArray(), true);
+// 			}
+// 		}
+// 	}
 
-void handleNoteOn(byte note, byte velocity, byte channel);
-void handleNoteOff(byte note, byte velocity, byte channel);
-void handleControlChange(byte control, byte value, byte channel);
-void handleProgramChange(byte program, byte channel);
-void handleSystemExclusive(uint32_t length, const uint8_t *sysexData, bool hasBeginEnd);
+}
+// END LOOP
+
+void handleNoteOn(byte channel, byte pitch, byte velocity);
+void handleNoteOff(byte channel, byte pitch, byte velocity);
+void handleControlChange(byte channel, byte number, byte value);
+void handleProgramChange(byte channel, byte number);
+void handleSystemExclusive(byte* array, unsigned size);
 void handleClock(void);
 void handleStart(void);
 void handleContinue(void);
 void handleStop(void);
 
-void sendNoteOn(byte note, byte velocity, byte channel) {
+void sendNoteOn(byte channel, byte note, byte velocity) {
 	USBMIDI.sendNoteOn(note, velocity, channel);
 	HWMIDI.sendNoteOn(note, velocity, channel);
 }
 
-void sendNoteOff(byte note, byte velocity, byte channel) {
+void sendNoteOff(byte channel, byte note, byte velocity) {
 	USBMIDI.sendNoteOff(note, velocity, channel);
 	HWMIDI.sendNoteOff(note, velocity, channel);
 }
 
-void sendControlChange(byte control, byte value, byte channel) {
+void sendControlChange(byte channel, byte control, byte value) {
 	USBMIDI.sendControlChange(control, value, channel);
 	HWMIDI.sendControlChange(control, value, channel);
 }
 
-void sendProgramChange(byte program, byte channel) {
+void sendProgramChange(byte channel, byte program) {
 	USBMIDI.sendProgramChange(program, channel);
 	HWMIDI.sendProgramChange(program, channel);
 }
 
 void sendSysEx(uint32_t length, const uint8_t *sysexData, bool hasBeginEnd) {
 	USBMIDI.sendSysEx(length, sysexData, hasBeginEnd);
+}
+
+void OnSysEx(byte* sysexData, unsigned length) 
+{
+	processIncomingSysex(sysexData, length);
 }
 
 void sendClock() {
@@ -519,4 +504,91 @@ void printCCBanks(){
 		}
  }
 
+}
+
+// SYSEX
+
+
+
+void processIncomingSysex(const uint8_t* sysexData, unsigned size) {
+	if(size < 3) {
+		Serial.println("That's an empty sysex");
+		return;
+	}
+	// F0 7D 00 00
+	if(!(sysexData[1] == 0x7d && sysexData[2] == 0x00 && sysexData[3] == 0x00)) {
+		Serial.println("Not a valid sysex message for us");
+		return;
+	}
+
+	switch(sysexData[4]) {
+		case INFO:
+			// 1F = "1nFo" - please send me your current config
+			Serial.println("Got an 1nFo request");
+			sendCurrentState();
+			break;
+		case CONFIG_EDIT:
+			// 0E - c0nfig Edit - here is a new config
+// 			Serial.println("Got an c0nfig Edit");
+			// this->updateAllSettingsAndStore(sysexData, size);
+			break;
+		case CONFIG_DEVICE_EDIT:
+			// 0D - c0nfig Device edit - new config just for device opts
+// 			Serial.println("Got an c0nfig Device Edit");
+			// this->updateDeviceSettingsAndStore(sysexData, size);
+			break;
+		default:
+			break;
+// 		case 0x0a:
+// 			// 0a - change config, don't store
+// 			this->updateDeviceSettings(sysexData, size);
+// 			break;
+//		case 0x0c:
+//			// 0C - c0nfig usb edit - here is a new config just for usb
+//			updateUSBSettingsAndStore(sysexData, size);
+//			break;
+//		case 0x0b:
+//			// 0B - c0nfig trs edit - here is a new config just for trs
+//			updateTRSSettingsAndStore(sysexData, size);
+//			break;
+	}
+}
+void sendCurrentState() {
+	//   0F - "c0nFig" - outputs its config:
+	uint8_t sysexData[EEPROM_HEADER_SIZE+8];
+
+	sysexData[0] = 0x7d; // manufacturer
+	sysexData[1] = 0x00;
+	sysexData[2] = 0x00;
+
+	sysexData[3] = 0x0F; // ConFig;
+
+	sysexData[4] = DEVICE_ID; // Device 01, ie, dev board
+	sysexData[5] = MAJOR_VERSION; // major version
+	sysexData[6] = MINOR_VERSION; // minor version
+	sysexData[7] = POINT_VERSION; // point version
+
+	// 	32 bytes of data:
+	// 	X
+	// 	X
+	// 	X
+	//	X
+	//	X
+	// 	X
+	// 	X
+	// 	X
+
+	uint8_t buffer[EEPROM_HEADER_SIZE];
+	// this->storage->readArray(0, buffer, EEPROM_HEADER_SIZE);
+
+	int offset = 8;
+	for(int i = 0; i < EEPROM_HEADER_SIZE; i++) {
+		int data = buffer[i];
+		if(data == 0xff) {
+		  data = 0x7f;
+		}
+		sysexData[i+offset] = data;
+	}
+
+	USBMIDI.sendSysEx(EEPROM_HEADER_SIZE + offset, sysexData, false);
 }
