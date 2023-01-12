@@ -16,3 +16,25 @@ Hacking
 * RP2040 processor
 * STEMMA-QT connector (i2c)
 * Breakout connections for 3 analog (A0, A1, A2) and 3 digital pins (D4, D11, D12)
+
+--- 
+
+### PlatformIO
+Things should be properly configured in the repo to directly compile with PlatformIO
+
+###  Arduino Setup
+Install RP2040 Arduino Core - see instructions at https://github.com/earlephilhower/arduino-pico#installing-via-arduino-boards-manager
+
+Add `https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json` to the "Additional Boards Manager URLs" field in Arduino's Preferences.
+
+#### Required Libraries
+Install from Arduino Library Manager if possible
+
+Adafruit_NeoPixel   // https://github.com/adafruit/Adafruit_NeoPixel
+Adafruit_TinyUSB    // https://github.com/adafruit/Adafruit_TinyUSB_Arduino
+MIDI			    // https://github.com/FortySevenEffects/arduino_midi_library
+ArduinoJson		    // https://arduinojson.org/
+CD74HC4067          // https://github.com/waspinator/CD74HC4067
+ResponsiveAnalogRead    // https://damienclarke.me/#responsiveanalogread
+LittleFS
+avdweb_Switch    // https://github.com/avandalen/avdweb_Switch
