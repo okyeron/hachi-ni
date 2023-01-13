@@ -37,4 +37,4 @@ ArduinoJson		    // https://arduinojson.org/
 CD74HC4067          // https://github.com/waspinator/CD74HC4067
 ResponsiveAnalogRead    // https://damienclarke.me/#responsiveanalogread
 LittleFS
-avdweb_Switch    // https://github.com/avandalen/avdweb_Switch
+avdweb_Switch    // https://github.com/avandalen/avdweb_Switch ( not in library manager - needs to be manually installed)
