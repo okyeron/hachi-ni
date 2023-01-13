@@ -64,8 +64,14 @@ class bank {
 
 		bank() {
 			fillRange(0,0);
+			fillChan(0,0);
 		}
-
+		void fillChan(int usbChan,int trsChan) {
+			for(int i=0; i < 16; i++) {
+				usbChannel[i] = usbChan;
+				trsChannel[i] = trsChan;
+			}
+		}
 		void fillRange(int usbStart, int trsStart) {
 			for(int i=0; i < 16; i++) {
 				usbCC[i] = i + usbStart;
@@ -496,6 +502,7 @@ void rainbow(int wait) {
 void initCCbanks(){
 	ccBanks[0].fillRange(32,32);
 	ccBanks[1].fillRange(16,16);
+	ccBanks[1].fillChan(1,1);
 	ccBanks[2].fillRange(48,48);
 	ccBanks[3].fillRange(0,0);
 	ccBanks[4].fillRange(0,0);

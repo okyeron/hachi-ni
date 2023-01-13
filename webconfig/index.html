@@ -6,125 +6,125 @@
 	<title>WebMIDI Config</title>
 
 	<script>
-    async function midi() {
-      try {
-        MIDIAccess.prototype.receive = function(listener, timeout) {
-          return new Promise(resolve => {
-            const inputs = this.inputs.values();
-            const timer = timeout && setTimeout(() => finish(), timeout);
+	async function midi() {
+	  try {
+		MIDIAccess.prototype.receive = function(listener, timeout) {
+		  return new Promise(resolve => {
+			const inputs = this.inputs.values();
+			const timer = timeout && setTimeout(() => finish(), timeout);
 
-            const finish = result => {
-              clearTimeout(timer);
-              for (input of inputs)
-                input.removeEventListener("midimessage", message);
-              resolve(result);
-            };
+			const finish = result => {
+			  clearTimeout(timer);
+			  for (input of inputs)
+				input.removeEventListener("midimessage", message);
+			  resolve(result);
+			};
 
-            const message = event => {
-              const result = listener ? listener(event) : event;
-              if (result)
-                finish(result);
-            };
+			const message = event => {
+			  const result = listener ? listener(event) : event;
+			  if (result)
+				finish(result);
+			};
 
-            for (input of inputs)
-              input.addEventListener("midimessage", message);
-          });
-        }
+			for (input of inputs)
+			  input.addEventListener("midimessage", message);
+		  });
+		}
 
-        MIDIInput.prototype.receive = function(listener, timeout) {
-          return new Promise(resolve => {
-            const timer = timeout && setTimeout(() => finish(), timeout);
+		MIDIInput.prototype.receive = function(listener, timeout) {
+		  return new Promise(resolve => {
+			const timer = timeout && setTimeout(() => finish(), timeout);
 
-            const finish = result => {
-              clearTimeout(timer);
-              this.removeEventListener("midimessage", message);
-              this.removeEventListener("statechange", connection);
-              resolve(result);
-            }
+			const finish = result => {
+			  clearTimeout(timer);
+			  this.removeEventListener("midimessage", message);
+			  this.removeEventListener("statechange", connection);
+			  resolve(result);
+			}
 
-            const message = event => {
-              const result = listener ? listener(event) : event;
-              if (result)
-                finish(result);
-            };
+			const message = event => {
+			  const result = listener ? listener(event) : event;
+			  if (result)
+				finish(result);
+			};
 
-            const connection = event => {
-              if (event.port.state != "connected")
-                finish()
-            };
+			const connection = event => {
+			  if (event.port.state != "connected")
+				finish()
+			};
 
-            this.addEventListener("midimessage", message);
-            this.addEventListener("statechange", connection);
-          });
-        };
+			this.addEventListener("midimessage", message);
+			this.addEventListener("statechange", connection);
+		  });
+		};
 
-        return await navigator.requestMIDIAccess({sysex: true});
-      } catch {
-        return null;
-      }
-    }
+		return await navigator.requestMIDIAccess({sysex: true});
+	  } catch {
+		return null;
+	  }
+	}
 
-    function hex(data) {
-      return data.reduce(function(s, x) {
-        return s + " " + x.toString(16).padStart(2, "0");
-      }, "").slice(1);
-    }
+	function hex(data) {
+	  return data.reduce(function(s, x) {
+		return s + " " + x.toString(16).padStart(2, "0");
+	  }, "").slice(1);
+	}
 
-    function raw(line) {
-      const words = line.split(/\s+/).filter(Boolean);
-      const bytes = words.map(x => Number("0x" + x));
-      return bytes.map(x => isNaN(x) || x > 0xff ? null : x);
-    }
+	function raw(line) {
+	  const words = line.split(/\s+/).filter(Boolean);
+	  const bytes = words.map(x => Number("0x" + x));
+	  return bytes.map(x => isNaN(x) || x > 0xff ? null : x);
+	}
 
-    function match(pattern, data) {
-      if (pattern == null || data.length < pattern.length)
-        return false;
-      for (let index = 0; index < pattern.length; index++)
-        if (pattern[index] != null && pattern[index] != data[index])
-          return false;
-      return true;
-    }
+	function match(pattern, data) {
+	  if (pattern == null || data.length < pattern.length)
+		return false;
+	  for (let index = 0; index < pattern.length; index++)
+		if (pattern[index] != null && pattern[index] != data[index])
+		  return false;
+	  return true;
+	}
 
-    const midiDevice = {
-      clear() {
-        this.model = null;
-        this.version = null;
-        this.ver = null;
-        this.eeprom_version = null;
-        this.bank = null;
-        this.input = null;
-        this.output = null;
-        this.data = null;
-      },
+	const midiDevice = {
+	  clear() {
+		this.model = null;
+		this.version = null;
+		this.ver = null;
+		this.eeprom_version = null;
+		this.bank = null;
+		this.input = null;
+		this.output = null;
+		this.data = null;
+	  },
 
-      async dump(request, start, filter, finish, timeout) {
-        const messages = [];
-        const promise = this.receive(function(event) {
-          if (start && match(start, event.data))
-            start = null;
-          else if (start)
-            return false;
-          if (match(filter || [], event.data))
-            messages.push(event.data);
-          return match(finish, event.data);
-        }, timeout);
-        this.transmit(request);
-        return await promise, messages;
-      },
+	  async dump(request, start, filter, finish, timeout) {
+		const messages = [];
+		const promise = this.receive(function(event) {
+		  if (start && match(start, event.data))
+			start = null;
+		  else if (start)
+			return false;
+		  if (match(filter || [], event.data))
+			messages.push(event.data);
+		  return match(finish, event.data);
+		}, timeout);
+		this.transmit(request);
+		return await promise, messages;
+	  },
 
-      async find(access) {
-       	     	
-        const identify = raw("f0 7d 00 00 1f f7"), timeout = 100;
-        const signature = raw("f0 7d 00 00 0F ?? ?? ?? ??");
-        const msgsignature = raw("B0 ?? ??");
+	  async find(access) {
+				
+		const identify = raw("f0 7d 00 00 1f f7"), timeout = 100;
+		const signature = raw("f0 7d 00 00 0F ?? ?? ?? ??");
+		const msgsignature = raw("B0 ?? ??");
 
-        const model = message => ({
-          0x03: "8x2"
-        })[message[5]];
-        const version = message => (message[6] + "." + message[7] + "." + message[8]);
-        const ver = message => (message[6]);
-        const eeprom_version = message => (message[9]);
-        const bank = message => (message[10]);
+		const model = message => ({
+		  0x03: "8x2"
+		})[message[5]];
+		const version = message => (message[6] + "." + message[7] + "." + message[8]);
+		const ver = message => (message[6]);
+		const eeprom_version = message => (message[9]);
+		const bank = message => (message[10]);
 
 		var cmd = message => (message[0]);
 		var type = message => (message[0] & 0xf0);
@@ -132,53 +132,56 @@
 		var cntrl = message => (message[1]);
 		var cntrlvalue = message => (message[2]);
 		
-        if (this.model)
-          if (this.input && this.input.state == "connected")
-            if (this.output && this.output.state == "connected")
-              return this.model;
-        this.clear();
+		if (this.model)
+		  if (this.input && this.input.state == "connected")
+			if (this.output && this.output.state == "connected")
+			  return this.model;
+		this.clear();
 
-        for (const port of access.outputs.values()) {
-          const promise = access.receive(event => {
-            if (match(signature, event.data)){
-              if (this.model = model(event.data), this.model) {
-                this.version = version(event.data);
-                this.ver = ver(event.data);
-                this.eeprom_version = eeprom_version(event.data);
-                this.bank = bank(event.data);
-                this.input = event.target;
-                this.output = port;
-                this.data = event.data;
-                return true;
-              }
-            }
-          	if (match(msgsignature, event.data)){
-//           		console.log('cntrl: '+ cntrl(event.data) + ":"+ cntrlvalue(event.data));
-          		controller( cntrl(event.data), cntrlvalue(event.data) );
-          	}
-          
-          
-            
-          }, timeout);
-          port.send(identify);
-          if (await promise) {
-            break;
-        	}
-        }
-        return this.model;
-      },
+		for (const port of access.outputs.values()) {
+		  const promise = access.receive(event => {
+			if (match(signature, event.data)){
+			  if (this.model = model(event.data), this.model) {
+				this.version = version(event.data);
+				this.ver = ver(event.data);
+				this.eeprom_version = eeprom_version(event.data);
+				this.bank = bank(event.data);
+				this.input = event.target;
+				this.output = port;
+				this.data = event.data;
+				return true;
+			  }
+			}
+			var status = event.data[0] & 0xf0;
+			console.log('type:'+ type(event.data));
+			console.log('status:'+ status);
+			if (match(msgsignature, event.data)){
+//					console.log('cntrl: '+ cntrl(event.data) + ":"+ cntrlvalue(event.data));
+				controller( cntrl(event.data), cntrlvalue(event.data) );
+			}
+		  
+		  
+			
+		  }, timeout);
+		  port.send(identify);
+		  if (await promise) {
+			break;
+			}
+		}
+		return this.model;
+	  },
 
-      async receive(listener, timeout) {
-        if (this.input)
-          return await this.input.receive(listener, timeout);
-      },
+	  async receive(listener, timeout) {
+		if (this.input)
+		  return await this.input.receive(listener, timeout);
+	  },
 
-      transmit(data, time) {
-        if (this.output)
-          return this.output.send(data, time);
-      }
-      
-    };
+	  transmit(data, time) {
+		if (this.output)
+		  return this.output.send(data, time);
+	  }
+	  
+	};
 	
 	document.addEventListener("click", async function() {
 	});
@@ -187,7 +190,7 @@
 		let thisid = document.getElementById('ccval'+number);
 		thisid.innerHTML = value;
 		thisid.style.height = value + 1 + "px";
-// 		thisid.style.top = 129-value + "px"; 
+//		thisid.style.top = 129-value + "px"; 
 		thisid.style.background = "#cccccc";
 	}
 
@@ -256,52 +259,52 @@
 				document.getElementById("modes").selectedIndex = Number(e.target.value) - 1;
 			}
 
-// 			dl = document.createElement("datalist");
-// 			dl.id = "modes";
-// 			modelist.forEach(function(item){
-// 			   var option = document.createElement('option');
-// 			   option.value = item;
-// 			   dl.appendChild(option);
-// 			});
-// 			t.appendChild(dl);
+//			dl = document.createElement("datalist");
+//			dl.id = "modes";
+//			modelist.forEach(function(item){
+//			   var option = document.createElement('option');
+//			   option.value = item;
+//			   dl.appendChild(option);
+//			});
+//			t.appendChild(dl);
 
 			
-// 			for (var hh = 0; hh < 3; hh++) {
-// 				var nr = document.createElement("dd");
-// 				nr.className = "header";
-// 				t.appendChild(nr);
-// 				var rr = document.createElement("span");
-// 				rr.className = "rlabel";
-// 				rr.innerHTML= labels[hh];
+//			for (var hh = 0; hh < 3; hh++) {
+//				var nr = document.createElement("dd");
+//				nr.className = "header";
+//				t.appendChild(nr);
+//				var rr = document.createElement("span");
+//				rr.className = "rlabel";
+//				rr.innerHTML= labels[hh];
 // 
 // 
-// 				var cc = document.createElement("input");
-// 				nr.appendChild(cc);
-// 				nr.appendChild(rr);
+//				var cc = document.createElement("input");
+//				nr.appendChild(cc);
+//				nr.appendChild(rr);
 // 
-//  				if (hh == 0) {
-//  					cc.onchange = updateModeSelect;
-//  					var chooser = document.createElement("select");
-// 					chooser.id = "modes";
-// 					chooser.onchange = updateMode;
-// 					modelist.forEach(function(item, index){
-// 					   var option = document.createElement('option');
-// 					   option.value = index;
-// 					   option.text = item;
-// 					   if (midiDevice.data[hh+10] == index){
-// 					   option.selected = true;
-// 					   }
-// 					   chooser.appendChild(option);
-// 					});
-//  					nr.appendChild(chooser);
-//  				}
+//					if (hh == 0) {
+//						cc.onchange = updateModeSelect;
+//						var chooser = document.createElement("select");
+//					chooser.id = "modes";
+//					chooser.onchange = updateMode;
+//					modelist.forEach(function(item, index){
+//					   var option = document.createElement('option');
+//					   option.value = index;
+//					   option.text = item;
+//					   if (midiDevice.data[hh+10] == index){
+//					   option.selected = true;
+//					   }
+//					   chooser.appendChild(option);
+//					});
+//						nr.appendChild(chooser);
+//					}
 // 
-// 				cc.setAttribute("type", "number");
-// 				cc.setAttribute("min", "1");
-// 				cc.setAttribute("max", "16");
-// 				cc.setAttribute("id", (hh+6));
-// 				cc.setAttribute("value", midiDevice.data[hh+10] + 1);
-// 			}
+//				cc.setAttribute("type", "number");
+//				cc.setAttribute("min", "1");
+//				cc.setAttribute("max", "16");
+//				cc.setAttribute("id", (hh+6));
+//				cc.setAttribute("value", midiDevice.data[hh+10] + 1);
+//			}
 
 			var bank = midiDevice.data[9];
 
@@ -319,7 +322,7 @@
 				
 				for (var col = 0; col < 16; col++) {
 					var newCell = document.createElement("input");
-// 					newRow.appendChild(newCell);
+//					newRow.appendChild(newCell);
 
 					newCell.row = bank;
 					newCell.col = col;
@@ -335,12 +338,12 @@
 				}
 				newRow.appendChild(label);
 			
-// 			main.appendChild(t);
-// 			var ee = document.createElement("input");
-// 			ee.setAttribute("type", "hidden");
-// 			ee.setAttribute("id", "eeprom");
-// 			ee.setAttribute("value", midiDevice.data[9]);
-// 			main.appendChild(ee);
+//			main.appendChild(t);
+//			var ee = document.createElement("input");
+//			ee.setAttribute("type", "hidden");
+//			ee.setAttribute("id", "eeprom");
+//			ee.setAttribute("value", midiDevice.data[9]);
+//			main.appendChild(ee);
 
 			
 			// CC ROW
@@ -358,7 +361,7 @@
 				
 				for (var col = 0; col < 16; col++) {
 					var newCell = document.createElement("input");
-// 					newRow.appendChild(newCell);
+//					newRow.appendChild(newCell);
 
 					newCell.row = bank;
 					newCell.col = col;
@@ -387,7 +390,7 @@
 				
 				for (var col = 0; col < 16; col++) {
 					var newCell = document.createElement("span");
-// 					newRow.appendChild(newCell);
+//					newRow.appendChild(newCell);
 
 					newCell.row = bank;
 					newCell.col = col;
@@ -409,7 +412,7 @@
 
 		}
 
-// 		while (true) {
+//		while (true) {
 			if (midiDevice.model == null) {
 				status.style.color = "grey";
 				status.textContent = "Scanning...";
@@ -420,37 +423,37 @@
 				status.textContent = midiDevice.model + " v" + midiDevice.version + " (ep-" + midiDevice.eeprom_version + ")";
 			}
 			showgrid();
- 			await new Promise(resolve => setTimeout(interrupt = resolve, 1000));
-// 		}
+			await new Promise(resolve => setTimeout(interrupt = resolve, 1000));
+//		}
 	});
 
 	</script>
 
 	<style>
-    html, body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    }
+	html, body {
+	  margin: 0;
+	  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	}
 
-    header {
-      display: flex;
-      border-bottom: 1px solid #ddd;
-      padding: 4px;
-      font-family: system-ui, sans-serif;
-    }
+	header {
+	  display: flex;
+	  border-bottom: 1px solid #ddd;
+	  padding: 4px;
+	  font-family: system-ui, sans-serif;
+	}
 
-    header > * {
-      margin: 4px;
-      cursor: pointer;
-    }
+	header > * {
+	  margin: 4px;
+	  cursor: pointer;
+	}
 
-    header #title {
-      flex: 1;
-      color: inherit;
-      font-weight: bold;
-      text-decoration: inherit;
-    }
-    input, button, select, textarea {
+	header #title {
+	  flex: 1;
+	  color: inherit;
+	  font-weight: bold;
+	  text-decoration: inherit;
+	}
+	input, button, select, textarea {
 		font-family: inherit;
 		font-size: inherit;
 		text-align: center;
@@ -459,12 +462,12 @@
 		box-sizing: border-box;
 		border: 1px solid #ccc;
 		border-radius: 2px;
-    }
-    input.channelbox, input.ccbox {
-    	width: 3em;
+	}
+	input.channelbox, input.ccbox {
+		width: 3em;
 	}
 	span.ccval {
-	    display: inline-block;
+		display: inline-block;
 		font-family: inherit;
 		font-size: inherit;
 		text-align: center;
@@ -475,7 +478,7 @@
 		width: 3em;
 		height:0px;
 	}
-    dl {
+	dl {
 		display: block;
 		margin-block-start: 1em;
 		margin-block-end: 0.1em;
@@ -485,10 +488,10 @@
 	}
 	dd {
 		display: block;
-	    padding: 0 0 0.5rem 0;
-    	margin: 0;
-    	margin-right: 5px;
-    	margin-inline-start: 40px;
+		padding: 0 0 0.5rem 0;
+		margin: 0;
+		margin-right: 5px;
+		margin-inline-start: 40px;
 	}
 	dd.valuerow{
 		position: relative;
@@ -505,32 +508,32 @@
 		margin: 0 0 0.5em 0;
 	}
 	#controls {
-	    display: flex;
-    	min-width: calc(16 * 60px);
+		display: flex;
+		min-width: calc(16 * 60px);
 	}
-    #main {
-      padding: 8px;
-    }
-    #nav {
-      padding: 8px;
-    }
-    button.svelte-1gcivh1 {
-    text-align: left;
-    border-radius: 5px;
-    display: inline-block;
+	#main {
+	  padding: 8px;
+	}
+	#nav {
+	  padding: 8px;
+	}
+	button.svelte-1gcivh1 {
+	text-align: left;
+	border-radius: 5px;
+	display: inline-block;
 	}
 	.fas {
 	font-family: "Font Awesome 5 Free";
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-    display: inline-block;
-    font-style: normal;
-    font-variant: normal;
-    text-rendering: auto;
-    line-height: 1;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
+	display: inline-block;
+	font-style: normal;
+	font-variant: normal;
+	text-rendering: auto;
+	line-height: 1;
 	}
 	.fa-file-import:before {
-    	content: "\f56f";
+		content: "\f56f";
 	}
 	
 	</style>
@@ -541,7 +544,7 @@
 		<div id="title">WebMIDI SYSEX Config</div>
 		<span id="status"></span>
 	</header>
-	<div id="main">	
+	<div id="main"> 
 	</div>
 
 	<div id="nav">
