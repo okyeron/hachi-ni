@@ -529,12 +529,12 @@ void processIncomingSysex(const uint8_t* sysexData, unsigned size) {
 			break;
 		case CONFIG_EDIT:
 			// 0E - c0nfig Edit - here is a new config
-// 			Serial.println("Got an c0nfig Edit");
+ 			Serial.println("Got an c0nfig Edit");
 			// this->updateAllSettingsAndStore(sysexData, size);
 			break;
 		case CONFIG_DEVICE_EDIT:
 			// 0D - c0nfig Device edit - new config just for device opts
-// 			Serial.println("Got an c0nfig Device Edit");
+ 			Serial.println("Got an c0nfig Device Edit");
 			// this->updateDeviceSettingsAndStore(sysexData, size);
 			break;
 		default:
@@ -555,8 +555,12 @@ void processIncomingSysex(const uint8_t* sysexData, unsigned size) {
 }
 void sendCurrentState() {
 	//   0F - "c0nFig" - outputs its config:
-	uint8_t sysexData[EEPROM_HEADER_SIZE+8];
+	int offset = 8;
+	int buffersize = 80;
+	int fullbuffer = offset + buffersize;
+	uint8_t sysexData[fullbuffer];
 
+	// 8 bytes to start things off
 	sysexData[0] = 0x7d; // manufacturer
 	sysexData[1] = 0x00;
 	sysexData[2] = 0x00;
@@ -568,27 +572,58 @@ void sendCurrentState() {
 	sysexData[6] = MINOR_VERSION; // minor version
 	sysexData[7] = POINT_VERSION; // point version
 
-	// 	32 bytes of data:
-	// 	X
-	// 	X
-	// 	X
-	//	X
-	//	X
-	// 	X
-	// 	X
-	// 	X
+// 	16 bytes of config flags?
+//	BANK NUMBER
+// 	LED BLINK ?
+// 	ROTATE (flip+reverse) ?
+// 	MIDI THRU ?
+//  X
+//  X
+//  X
+//  X
 
-	uint8_t buffer[EEPROM_HEADER_SIZE];
-	// this->storage->readArray(0, buffer, EEPROM_HEADER_SIZE);
+//	64 bytes for usb and trs settings
+// 	16x USBccs
+// 	16x TRSccs
+// 	16x USB channels
+// 	16x TRS channels
 
-	int offset = 8;
-	for(int i = 0; i < EEPROM_HEADER_SIZE; i++) {
+	uint8_t buffer[buffersize];
+	// Read 80 bytes into the array
+	readSettingsToArray(activeBank, 0, buffer, buffersize);
+
+	for(int i = 0; i < buffersize; i++) {
 		int data = buffer[i];
 		if(data == 0xff) {
 		  data = 0x7f;
 		}
 		sysexData[i+offset] = data;
 	}
+	USBMIDI.sendSysEx(fullbuffer, sysexData, false);
+}
 
-	USBMIDI.sendSysEx(EEPROM_HEADER_SIZE + offset, sysexData, false);
+void readSettingsToArray(uint8_t bank, size_t address, uint8_t buffer[], int length){
+	buffer[0] = bank;
+	for (int i = 1; i < 16; i++) {
+		// settings
+		buffer[i] = 0;
+	}
+	int j = 16;
+	for (int k = 0; k < 16; k++) {
+		buffer[j] = ccBanks[bank].usbCC[k];
+		j = j+1;
+	}
+	for (int k = 0; k < 16; k++) {
+		buffer[j] = ccBanks[bank].trsCC[k];
+		j = j+1;
+	}
+	for (int k = 0; k < 16; k++) {
+		buffer[j] = ccBanks[bank].usbChannel[k];
+		j = j+1;
+	}
+	for (int k = 0; k < 16; k++) {
+		buffer[j] = ccBanks[bank].trsChannel[k];
+		j = j+1;
+	}
+	
 }
