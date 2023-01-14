@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>WebMIDI Config</title>
+	<title>8x2 WebMIDI Config</title>
 
 	<script>
 	async function midi() {
@@ -242,76 +242,63 @@
 		
 		function showgrid(){
 			const main = document.getElementById("main");
-			var labels = ["Mode", "Playing Pattern", "Midi Channel"];
-			var modelist = ["MIDI", "S1", "S2", "OM"];
+			var banklist = [1,2,3,4,5,6,7,8];
 
 			var t = document.createElement("dl");
 			t.setAttribute("class", "grid");
 
-			function updateMode(e){
-				// console.log(e.target.value);
-				var modeid = document.getElementById("6");
-				modeid.value = Number(e.target.value) + 1;
-			}
-			function updateModeSelect(e){
-				// console.log(e.target.value);
-				document.getElementById("modes").selectedIndex = Number(e.target.value) - 1;
-			}
-
-//			dl = document.createElement("datalist");
-//			dl.id = "modes";
-//			modelist.forEach(function(item){
-//			   var option = document.createElement('option');
-//			   option.value = item;
-//			   dl.appendChild(option);
-//			});
-//			t.appendChild(dl);
-
-			
-//			for (var hh = 0; hh < 3; hh++) {
-//				var nr = document.createElement("dd");
-//				nr.className = "header";
-//				t.appendChild(nr);
-//				var rr = document.createElement("span");
-//				rr.className = "rlabel";
-//				rr.innerHTML= labels[hh];
-// 
-// 
-//				var cc = document.createElement("input");
-//				nr.appendChild(cc);
-//				nr.appendChild(rr);
-// 
-//					if (hh == 0) {
-//						cc.onchange = updateModeSelect;
-//						var chooser = document.createElement("select");
-//					chooser.id = "modes";
-//					chooser.onchange = updateMode;
-//					modelist.forEach(function(item, index){
-//					   var option = document.createElement('option');
-//					   option.value = index;
-//					   option.text = item;
-//					   if (midiDevice.data[hh+10] == index){
-//					   option.selected = true;
-//					   }
-//					   chooser.appendChild(option);
-//					});
-//						nr.appendChild(chooser);
-//					}
-// 
-//				cc.setAttribute("type", "number");
-//				cc.setAttribute("min", "1");
-//				cc.setAttribute("max", "16");
-//				cc.setAttribute("id", (hh+6));
-//				cc.setAttribute("value", midiDevice.data[hh+10] + 1);
-//			}
+ 			function updateMode(e){
+ 			
+ 				//.. program change and get values ?
+//  				console.log(e.target.value);
+ 				var modeid = document.getElementById("bankselect");
+ 				modeid.value = Number(e.target.value);
+ 				console.log(modeid.value);
+ 			}
+ 			function updateModeSelect(e){
+ 				console.log(e.target.value);
+ 				document.getElementById("bankselect").selectedIndex = Number(e.target.value) - 1;
+ 			}
 
 			var bank = midiDevice.data[9];
-				var headerRow = document.createElement("dd");
-				headerRow.className = "header";
-				var headerlabel = document.createElement("span");
-				headerlabel.innerHTML= "Bank " + (bank + 1);
-				t.appendChild(headerRow);
-				headerRow.appendChild(headerlabel);
+
+			for (var hh = 0; hh < 8; hh++) {
+				var rr = document.createElement("span");
+				rr.className = "rlabel";
+				rr.innerHTML= banklist[hh];
+   
+				if (hh == 0) {
+// 						cc.onchange = updateModeSelect;
+					var chooser = document.createElement("select");
+					chooser.id = "bankselect";
+					chooser.onchange = updateMode;
+					
+					banklist.forEach(function(item, index){
+						var option = document.createElement('option');
+						option.value = index;
+						option.text = item;
+						if (bank == index){
+							option.selected = true;
+						}
+						chooser.appendChild(option);
+					});
+				
+				}
+ 
+// 				cc.setAttribute("type", "number");
+// 				cc.setAttribute("min", "1");
+// 				cc.setAttribute("max", "16");
+// 				cc.setAttribute("id", (hh+6));
+// 				cc.setAttribute("value", midiDevice.data[hh+10] + 1);
+			}
+
+			var headerRow = document.createElement("dd");
+			headerRow.className = "header";
+			var headerlabel = document.createElement("span");
+			headerlabel.innerHTML= "Bank ";
+			headerlabel.appendChild(chooser);
+			t.appendChild(headerRow);
+			headerRow.appendChild(headerlabel);
 				
 			// Channel ROW
 			var x = 57;
@@ -411,8 +398,8 @@
 			main.appendChild(t);
 			var ee = document.createElement("input");
 			ee.setAttribute("type", "hidden");
-			ee.setAttribute("id", "eeprom");
-			ee.setAttribute("value", midiDevice.data[9]);
+			ee.setAttribute("id", "bank");
+			ee.setAttribute("value", bank);
 			main.appendChild(ee);
 
 		}
@@ -425,7 +412,7 @@
 
 			if (await midiDevice.find(access)) {
 				status.style.color = "green";
-				status.textContent = midiDevice.model + " v" + midiDevice.version + " (ep-" + midiDevice.eeprom_version + ")";
+				status.textContent = "["+ midiDevice.model + " v" + midiDevice.version + " (ep-" + midiDevice.eeprom_version + ")"+"]";
 			}
 			showgrid();
 			await new Promise(resolve => setTimeout(interrupt = resolve, 1000));
@@ -458,6 +445,10 @@
 	  font-weight: bold;
 	  text-decoration: inherit;
 	}
+	status {
+		margin-left: 3em;
+	}
+	
 	input, button, select, textarea {
 		font-family: inherit;
 		font-size: inherit;
@@ -534,7 +525,8 @@
 	  padding: 8px;
 	}
 	#nav {
-	  padding: 8px;
+		margin-inline-start: 40px;
+		padding: 8px;
 	}
 	button.svelte-1gcivh1 {
 	text-align: left;
@@ -560,20 +552,17 @@
 
 <body>
 	<header>
-		<div id="title">WebMIDI SYSEX Config</div>
+		<div id="title">8x2 WebMIDI Config</div>
 		<span id="status"></span>
 	</header>
-	<div id="main"> 
+	<div id="main">
 	</div>
-
 	<div id="nav">
 	<button id="saveconfig">
-		<span class="fas fa-file-import"></span> 
+		<span class="fas fa-file-import"></span>
 		Save Config
 	</button>
 	<span id="alert"></span>
-
 	</div>
-
 </body>
 </html>
