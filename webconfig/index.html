@@ -116,7 +116,7 @@
 				
 		const identify = raw("f0 7d 00 00 1f f7"), timeout = 100;
 		const signature = raw("f0 7d 00 00 0F ?? ?? ?? ??");
-		const msgsignature = raw("B0 ?? ??");
+// 		const msgsignature = raw("B0 ?? ??");
 
 		const model = message => ({
 		  0x03: "8x2"
@@ -152,10 +152,9 @@
 				return true;
 			  }
 			}
-			var status = event.data[0] & 0xf0;
-			console.log('type:'+ type(event.data));
-			console.log('status:'+ status);
-			if (match(msgsignature, event.data)){
+// 			var status = event.data[0] & 0xf0;
+// 			console.log('type:'+ type(event.data));
+			if (type(event.data) == 176){
 //					console.log('cntrl: '+ cntrl(event.data) + ":"+ cntrlvalue(event.data));
 				controller( cntrl(event.data), cntrlvalue(event.data) );
 			}
@@ -307,7 +306,13 @@
 //			}
 
 			var bank = midiDevice.data[9];
-
+				var headerRow = document.createElement("dd");
+				headerRow.className = "header";
+				var headerlabel = document.createElement("span");
+				headerlabel.innerHTML= "Bank " + (bank + 1);
+				t.appendChild(headerRow);
+				headerRow.appendChild(headerlabel);
+				
 			// Channel ROW
 			var x = 57;
 				var newRow = document.createElement("dd");
@@ -318,7 +323,7 @@
 
 				var label = document.createElement("span");
 				label.className = "rlabel";
-				label.innerHTML= "CC Channel " + (bank + 1);
+				label.innerHTML= "CC Channel ";
 				
 				for (var col = 0; col < 16; col++) {
 					var newCell = document.createElement("input");
@@ -357,7 +362,7 @@
 
 				var label = document.createElement("span");
 				label.className = "rlabel";
-				label.innerHTML= "CC Bank " + (bank + 1);
+				label.innerHTML= "CC Number ";
 				
 				for (var col = 0; col < 16; col++) {
 					var newCell = document.createElement("input");
@@ -383,25 +388,25 @@
 				newRow.row = bank;
 				// console.log(newRow);
 				t.appendChild(newRow);
-
+				var valuediv = document.createElement("div");
+				newRow.appendChild(valuediv);
+				valuediv.className = "valuediv";
+				
 				var label = document.createElement("span");
 				label.className = "rlabel";
 				label.innerHTML= "Values";
 				
 				for (var col = 0; col < 16; col++) {
 					var newCell = document.createElement("span");
-//					newRow.appendChild(newCell);
 
-					newCell.row = bank;
-					newCell.col = col;
 					newCell.setAttribute("id", "ccval"+midiDevice.data[z]);
 					newCell.innerHTML = 0;
 					newCell.setAttribute("class", "ccval");
 
-					newRow.appendChild(newCell);
+					valuediv.appendChild(newCell);
 					z++;
 				}
-				newRow.appendChild(label);
+				valuediv.appendChild(label);
 			
 			main.appendChild(t);
 			var ee = document.createElement("input");
@@ -473,11 +478,25 @@
 		text-align: center;
 		margin: 0 0 0.5em 0;
 		box-sizing: border-box;
-		border: 1px solid #ccc;
+		border: 1px solid #FFF;
+		border-bottom: 1px solid #CCC;
 		border-radius: 2px;
 		width: 3em;
 		height:0px;
+		
 	}
+	.valuediv{
+/* 
+		display:block;
+		position:absolute;
+		width:100%
+ */
+		display: flex;
+		height: 140px;
+		align-items: flex-end;
+    	align-content: flex-end;
+    	
+    	}
 	dl {
 		display: block;
 		margin-block-start: 1em;
@@ -495,7 +514,7 @@
 	}
 	dd.valuerow{
 		position: relative;
-		height: 150px;
+		height:140px;
 	}
 	dt.index {
 		background: #666;
