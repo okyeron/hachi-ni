@@ -193,6 +193,18 @@
 		thisid.style.background = "#cccccc";
 	}
 
+	function bankSelector(e){
+		var outbound = ["0xC0", e ]; // send Program Change on Channel 1
+		console.log(outbound);
+		const sendit = outbound, timeout = 100;
+		midiDevice.output.send(sendit);
+	}
+	document.addEventListener("change", async function() {
+		const bankSelect = document.getElementById("bankSelect");
+ 		bankSelector(bankSelect.value);
+
+	});
+
 	document.addEventListener("DOMContentLoaded", async function() {
 		const status = document.getElementById("status");
 		const alert = document.getElementById("alert");
@@ -226,6 +238,7 @@
 			
 		});
 		
+		
 
 		if (access == null) {
 			status.style.color = "red";
@@ -237,9 +250,9 @@
 			midiDevice.clear();
 			interrupt();
 			midiDevice.find(access);
-		
 		});
-		
+
+
 		function showgrid(){
 			const main = document.getElementById("main");
 			var banklist = [1,2,3,4,5,6,7,8];
@@ -248,12 +261,9 @@
 			t.setAttribute("class", "grid");
 
  			function updateMode(e){
- 			
- 				//.. program change and get values ?
-//  				console.log(e.target.value);
- 				var modeid = document.getElementById("bankselect");
+ 				//.. program change and get
+ 				var modeid = document.getElementById("bankSelect");
  				modeid.value = Number(e.target.value);
- 				console.log(modeid.value);
  			}
  			function updateModeSelect(e){
  				console.log(e.target.value);
@@ -270,8 +280,8 @@
 				if (hh == 0) {
 // 						cc.onchange = updateModeSelect;
 					var chooser = document.createElement("select");
-					chooser.id = "bankselect";
-					chooser.onchange = updateMode;
+					chooser.id = "bankSelect";
+// 					chooser.onchange = bankSelect;
 					
 					banklist.forEach(function(item, index){
 						var option = document.createElement('option');
@@ -284,13 +294,7 @@
 					});
 				
 				}
- 
-// 				cc.setAttribute("type", "number");
-// 				cc.setAttribute("min", "1");
-// 				cc.setAttribute("max", "16");
-// 				cc.setAttribute("id", (hh+6));
-// 				cc.setAttribute("value", midiDevice.data[hh+10] + 1);
-			}
+ 			}
 
 			var headerRow = document.createElement("dd");
 			headerRow.className = "header";
@@ -300,22 +304,20 @@
 			t.appendChild(headerRow);
 			headerRow.appendChild(headerlabel);
 				
-			// Channel ROW
-			var x = 57;
+				// USB Channel ROW
+				var x = 57;
 				var newRow = document.createElement("dd");
-				newRow.className = "row";
+				newRow.className = "row1";
 				newRow.row = bank;
 				// console.log(newRow);
 				t.appendChild(newRow);
 
 				var label = document.createElement("span");
 				label.className = "rlabel";
-				label.innerHTML= "CC Channel ";
+				label.innerHTML= "USB CC Channel ";
 				
 				for (var col = 0; col < 16; col++) {
 					var newCell = document.createElement("input");
-//					newRow.appendChild(newCell);
-
 					newCell.row = bank;
 					newCell.col = col;
 					newCell.setAttribute("type", "number");
@@ -330,26 +332,17 @@
 				}
 				newRow.appendChild(label);
 			
-//			main.appendChild(t);
-//			var ee = document.createElement("input");
-//			ee.setAttribute("type", "hidden");
-//			ee.setAttribute("id", "eeprom");
-//			ee.setAttribute("value", midiDevice.data[9]);
-//			main.appendChild(ee);
-
-			
-			// CC ROW
-			var z = 25;
-
+				// USB CC ROW
+				var z = 25;
 				var newRow = document.createElement("dd");
-				newRow.className = "row";
+				newRow.className = "row2";
 				newRow.row = bank;
 				// console.log(newRow);
 				t.appendChild(newRow);
 
 				var label = document.createElement("span");
 				label.className = "rlabel";
-				label.innerHTML= "CC Number ";
+				label.innerHTML= "USB CC Number ";
 				
 				for (var col = 0; col < 16; col++) {
 					var newCell = document.createElement("input");
@@ -368,6 +361,65 @@
 					z++;
 				}
 				newRow.appendChild(label);
+
+				// TRS Channel ROW
+				var x = 73;
+				var newRow = document.createElement("dd");
+				newRow.className = "row1";
+				newRow.row = bank;
+				// console.log(newRow);
+				t.appendChild(newRow);
+
+				var label = document.createElement("span");
+				label.className = "rlabel";
+				label.innerHTML= "TRS CC Channel ";
+				
+				for (var col = 0; col < 16; col++) {
+					var newCell = document.createElement("input");
+					newCell.row = bank;
+					newCell.col = col;
+					newCell.setAttribute("type", "number");
+					newCell.setAttribute("min", "1");
+					newCell.setAttribute("max", "16");
+					newCell.setAttribute("id", (x));
+					newCell.setAttribute("value", midiDevice.data[x]);
+					newCell.setAttribute("class", "ccbox");
+					
+					newRow.appendChild(newCell);
+					x++;
+				}
+				newRow.appendChild(label);
+			
+				// TRS CC ROW
+				var z = 41;
+				var newRow = document.createElement("dd");
+				newRow.className = "row2";
+				newRow.row = bank;
+				// console.log(newRow);
+				t.appendChild(newRow);
+
+				var label = document.createElement("span");
+				label.className = "rlabel";
+				label.innerHTML= "TRS CC Number ";
+				
+				for (var col = 0; col < 16; col++) {
+					var newCell = document.createElement("input");
+//					newRow.appendChild(newCell);
+
+					newCell.row = bank;
+					newCell.col = col;
+					newCell.setAttribute("type", "number");
+					newCell.setAttribute("min", "1");
+					newCell.setAttribute("max", "127");
+					newCell.setAttribute("id", (z));
+					newCell.setAttribute("value", midiDevice.data[z]);
+					newCell.setAttribute("class", "ccbox");
+
+					newRow.appendChild(newCell);
+					z++;
+				}
+				newRow.appendChild(label);
+
 
 				var z = 25;
 				var newRow = document.createElement("dd");
@@ -394,17 +446,17 @@
 					z++;
 				}
 				valuediv.appendChild(label);
-			
+
 			main.appendChild(t);
-			var ee = document.createElement("input");
-			ee.setAttribute("type", "hidden");
-			ee.setAttribute("id", "bank");
-			ee.setAttribute("value", bank);
-			main.appendChild(ee);
+
+// 			var ee = document.createElement("input");
+// 			ee.setAttribute("type", "hidden");
+// 			ee.setAttribute("id", "bank");
+// 			ee.setAttribute("value", bank);
+// 			main.appendChild(ee);
 
 		}
 
-//		while (true) {
 			if (midiDevice.model == null) {
 				status.style.color = "grey";
 				status.textContent = "Scanning...";
@@ -416,7 +468,8 @@
 			}
 			showgrid();
 			await new Promise(resolve => setTimeout(interrupt = resolve, 1000));
-//		}
+
+
 	});
 
 	</script>
@@ -502,6 +555,12 @@
 		margin: 0;
 		margin-right: 5px;
 		margin-inline-start: 40px;
+	}
+	dd.row1 {
+		padding: 0 0 0 0;
+	}
+	dd.row2 {
+		padding: 0 0 1rem 0;
 	}
 	dd.valuerow{
 		position: relative;

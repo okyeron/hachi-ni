@@ -146,8 +146,8 @@ void setup() {
 	HWMIDI.setHandleNoteOff(sendNoteOff);
 	USBMIDI.setHandleControlChange(sendControlChange);
 	HWMIDI.setHandleControlChange(sendControlChange);
-	USBMIDI.setHandleProgramChange(sendProgramChange);
-	HWMIDI.setHandleProgramChange(sendProgramChange);
+	USBMIDI.setHandleProgramChange(onProgramChange);
+	HWMIDI.setHandleProgramChange(onProgramChange);
 	USBMIDI.setHandleSystemExclusive(OnSysEx);
 
 
@@ -344,9 +344,18 @@ void sendControlChange(byte channel, byte control, byte value) {
 	HWMIDI.sendControlChange(control, value, channel);
 }
 
-void sendProgramChange(byte channel, byte program) {
-	USBMIDI.sendProgramChange(program, channel);
-	HWMIDI.sendProgramChange(program, channel);
+void onProgramChange(byte channel, byte program) {
+	Serial.print (channel);
+	Serial.print (":");
+	Serial.println (program);
+	activeBank = constrain(program, 0, numBanks-1);
+	pixelsOff();
+	pixels.setPixelColor(activeBank+1, 128, 0, 0);
+	pixels.show();
+	sendCurrentState();
+	
+//	USBMIDI.sendProgramChange(program, channel);
+//	HWMIDI.sendProgramChange(program, channel);
 }
 
 void sendSysEx(uint32_t length, const uint8_t *sysexData, bool hasBeginEnd) {
