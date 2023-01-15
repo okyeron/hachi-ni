@@ -352,7 +352,7 @@ void onProgramChange(byte channel, byte program) {
 	pixelsOff();
 	pixels.setPixelColor(activeBank+1, 128, 0, 0);
 	pixels.show();
-	sendCurrentState();
+//	sendCurrentState();
 	
 //	USBMIDI.sendProgramChange(program, channel);
 //	HWMIDI.sendProgramChange(program, channel);

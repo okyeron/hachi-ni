@@ -6,6 +6,7 @@
 	<title>8x2 WebMIDI Config</title>
 
 	<script>
+
 	async function midi() {
 	  try {
 		MIDIAccess.prototype.receive = function(listener, timeout) {
@@ -113,11 +114,11 @@
 	  },
 
 	  async find(access) {
-
 		const identify = raw("f0 7d 00 00 1f f7"), timeout = 100;
-		const signature = raw("f0 7d 00 00 0F ?? ?? ?? ??");
+		const signature = raw("f0 7d 00 00 0F");
 // 		const msgsignature = raw("B0 ?? ??");
 
+		const command = message => (message[4]);
 		const model = message => ({
 		  0x03: "8x2"
 		})[message[5]];
@@ -147,20 +148,21 @@
 						this.ver = ver(event.data);
 						this.eeprom_version = eeprom_version(event.data);
 						this.bank = bank(event.data);
+						this.command = command(event.data);
+						this.type = type(event.data);
 						this.input = event.target;
 						this.output = port;
 						this.data = event.data;
+						showgrid();
 						return true;
 					}
+					
 				}
+				
 				// do stuff with incoming CCs
 				if (type(event.data) == 176){
 		//			console.log('cntrl: '+ cntrl(event.data) + ":"+ cntrlvalue(event.data));
 					controller( cntrl(event.data), cntrlvalue(event.data) );
-				}
-				if (type(event.data) == 240){
-					console.log("sysex");
-// 					showgrid();
 				}
 			}, timeout);
 
@@ -171,6 +173,7 @@
 		}
 		return this.model;
 	  },
+
 
 	  async receive(listener, timeout) {
 		if (this.input)
@@ -184,22 +187,218 @@
 	  
 	};
 	
-	document.addEventListener("click", async function() {
-	});
 	
 	function controller( number, value ) {
-		let thisid = document.getElementById('ccval'+number);
-		thisid.innerHTML = value;
-		thisid.style.height = value + 1 + "px";
-//		thisid.style.top = 129-value + "px"; 
-		thisid.style.background = "#cccccc";
+		const ccnumber = document.getElementById('ccval'+number);
+		ccnumber.innerHTML = value;
+		ccnumber.style.height = value + 1 + "px";
+		ccnumber.style.background = "#cccccc";
 	}
 
 	function bankSelector(e){
 		var outbound = ["0xC0", e ]; // send Program Change on Channel 1
-		console.log(outbound);
+// 		console.log(outbound);
 		const sendit = outbound, timeout = 100;
 		midiDevice.output.send(sendit);
+		midiDevice.output.send(raw("F0 7D 00 00 1F F7"));
+		
+	}
+
+	function showgrid(){
+		const main = document.getElementById("main");
+		main.innerHTML = ""; 
+		
+		var banklist = [1,2,3,4,5,6,7,8];
+
+		var t = document.createElement("dl");
+		t.setAttribute("class", "grid");
+
+		var bank = midiDevice.data[9];
+
+		for (var hh = 0; hh < 8; hh++) {
+			var rr = document.createElement("span");
+			rr.className = "rlabel";
+			rr.innerHTML= banklist[hh];
+
+			if (hh == 0) {
+				var chooser = document.createElement("select");
+				chooser.id = "bankSelect";
+				
+				banklist.forEach(function(item, index){
+					var option = document.createElement('option');
+					option.value = index;
+					option.text = item;
+					if (bank == index){
+						option.selected = true;
+					}
+					chooser.appendChild(option);
+				});
+				chooser.addEventListener("change", async function() {
+					const bankSelect = document.getElementById("bankSelect");
+					bankSelector(bankSelect.value);
+				});
+			}
+		}
+
+		var headerRow = document.createElement("dd");
+		headerRow.className = "header";
+		var headerlabel = document.createElement("span");
+		headerlabel.innerHTML= "Bank ";
+		headerlabel.appendChild(chooser);
+		t.appendChild(headerRow);
+		headerRow.appendChild(headerlabel);
+			
+		// USB Channel ROW
+		var x = 57;
+		var newRow = document.createElement("dd");
+		newRow.className = "row1";
+		newRow.row = bank;
+		// console.log(newRow);
+		t.appendChild(newRow);
+
+		var label = document.createElement("span");
+		label.className = "rlabel";
+		label.innerHTML= "USB CC Channel ";
+		
+		for (var col = 0; col < 16; col++) {
+			var newCell = document.createElement("input");
+			newCell.row = bank;
+			newCell.col = col;
+			newCell.setAttribute("type", "number");
+			newCell.setAttribute("min", "1");
+			newCell.setAttribute("max", "16");
+			newCell.setAttribute("id", (x));
+			newCell.setAttribute("value", midiDevice.data[x]);
+			newCell.setAttribute("class", "ccbox");
+			
+			newRow.appendChild(newCell);
+			x++;
+		}
+		newRow.appendChild(label);
+	
+		// USB CC ROW
+		var z = 25;
+		var newRow = document.createElement("dd");
+		newRow.className = "row2";
+		newRow.row = bank;
+		// console.log(newRow);
+		t.appendChild(newRow);
+
+		var label = document.createElement("span");
+		label.className = "rlabel";
+		label.innerHTML= "USB CC Number ";
+		
+		for (var col = 0; col < 16; col++) {
+			var newCell = document.createElement("input");
+//					newRow.appendChild(newCell);
+
+			newCell.row = bank;
+			newCell.col = col;
+			newCell.setAttribute("type", "number");
+			newCell.setAttribute("min", "1");
+			newCell.setAttribute("max", "127");
+			newCell.setAttribute("id", (z));
+			newCell.setAttribute("value", midiDevice.data[z]);
+			newCell.setAttribute("class", "ccbox");
+
+			newRow.appendChild(newCell);
+			z++;
+		}
+		newRow.appendChild(label);
+
+		// TRS Channel ROW
+		var x = 73;
+		var newRow = document.createElement("dd");
+		newRow.className = "row1";
+		newRow.row = bank;
+		// console.log(newRow);
+		t.appendChild(newRow);
+
+		var label = document.createElement("span");
+		label.className = "rlabel";
+		label.innerHTML= "TRS CC Channel ";
+		
+		for (var col = 0; col < 16; col++) {
+			var newCell = document.createElement("input");
+			newCell.row = bank;
+			newCell.col = col;
+			newCell.setAttribute("type", "number");
+			newCell.setAttribute("min", "1");
+			newCell.setAttribute("max", "16");
+			newCell.setAttribute("id", (x));
+			newCell.setAttribute("value", midiDevice.data[x]);
+			newCell.setAttribute("class", "ccbox");
+			
+			newRow.appendChild(newCell);
+			x++;
+		}
+		newRow.appendChild(label);
+	
+		// TRS CC ROW
+		var z = 41;
+		var newRow = document.createElement("dd");
+		newRow.className = "row2";
+		newRow.row = bank;
+		// console.log(newRow);
+		t.appendChild(newRow);
+
+		var label = document.createElement("span");
+		label.className = "rlabel";
+		label.innerHTML= "TRS CC Number ";
+		
+		for (var col = 0; col < 16; col++) {
+			var newCell = document.createElement("input");
+//					newRow.appendChild(newCell);
+
+			newCell.row = bank;
+			newCell.col = col;
+			newCell.setAttribute("type", "number");
+			newCell.setAttribute("min", "1");
+			newCell.setAttribute("max", "127");
+			newCell.setAttribute("id", (z));
+			newCell.setAttribute("value", midiDevice.data[z]);
+			newCell.setAttribute("class", "ccbox");
+
+			newRow.appendChild(newCell);
+			z++;
+		}
+		newRow.appendChild(label);
+
+
+		var z = 25;
+		var newRow = document.createElement("dd");
+		newRow.className = "valuerow";
+		newRow.row = bank;
+		// console.log(newRow);
+		t.appendChild(newRow);
+		var valuediv = document.createElement("div");
+		newRow.appendChild(valuediv);
+		valuediv.className = "valuediv";
+		
+		var label = document.createElement("span");
+		label.className = "rlabel";
+		label.innerHTML= "Values";
+		
+		for (var col = 0; col < 16; col++) {
+			var newCell = document.createElement("span");
+
+			newCell.setAttribute("id", "ccval"+midiDevice.data[z]);
+			newCell.innerHTML = 0;
+			newCell.setAttribute("class", "ccval");
+
+			valuediv.appendChild(newCell);
+			z++;
+		}
+		valuediv.appendChild(label);
+
+		main.appendChild(t);
+
+// 			var ee = document.createElement("input");
+// 			ee.setAttribute("type", "hidden");
+// 			ee.setAttribute("id", "bank");
+// 			ee.setAttribute("value", bank);
+// 			main.appendChild(ee);
+
 	}
 
 	document.addEventListener("DOMContentLoaded", async function() {
@@ -241,7 +440,7 @@
 			status.textContent = "MIDI access refused";
 			return;
 		}
-
+		
 		status.addEventListener("click", function(){
 			midiDevice.clear();
 			interrupt();
@@ -249,200 +448,6 @@
 		});
 
 
-		function showgrid(){
-			const main = document.getElementById("main");
-			var banklist = [1,2,3,4,5,6,7,8];
-
-			var t = document.createElement("dl");
-			t.setAttribute("class", "grid");
-
-			var bank = midiDevice.data[9];
-
-			for (var hh = 0; hh < 8; hh++) {
-				var rr = document.createElement("span");
-				rr.className = "rlabel";
-				rr.innerHTML= banklist[hh];
-   
-				if (hh == 0) {
-					var chooser = document.createElement("select");
-					chooser.id = "bankSelect";
-					
-					banklist.forEach(function(item, index){
-						var option = document.createElement('option');
-						option.value = index;
-						option.text = item;
-						if (bank == index){
-							option.selected = true;
-						}
-						chooser.appendChild(option);
-					});
-					chooser.addEventListener("change", async function() {
-						const bankSelect = document.getElementById("bankSelect");
-				 		bankSelector(bankSelect.value);
-					});
-				}
- 			}
-
-			var headerRow = document.createElement("dd");
-			headerRow.className = "header";
-			var headerlabel = document.createElement("span");
-			headerlabel.innerHTML= "Bank ";
-			headerlabel.appendChild(chooser);
-			t.appendChild(headerRow);
-			headerRow.appendChild(headerlabel);
-				
-			// USB Channel ROW
-			var x = 57;
-			var newRow = document.createElement("dd");
-			newRow.className = "row1";
-			newRow.row = bank;
-			// console.log(newRow);
-			t.appendChild(newRow);
-
-			var label = document.createElement("span");
-			label.className = "rlabel";
-			label.innerHTML= "USB CC Channel ";
-			
-			for (var col = 0; col < 16; col++) {
-				var newCell = document.createElement("input");
-				newCell.row = bank;
-				newCell.col = col;
-				newCell.setAttribute("type", "number");
-				newCell.setAttribute("min", "1");
-				newCell.setAttribute("max", "16");
-				newCell.setAttribute("id", (x));
-				newCell.setAttribute("value", midiDevice.data[x]);
-				newCell.setAttribute("class", "ccbox");
-				
-				newRow.appendChild(newCell);
-				x++;
-			}
-			newRow.appendChild(label);
-		
-			// USB CC ROW
-			var z = 25;
-			var newRow = document.createElement("dd");
-			newRow.className = "row2";
-			newRow.row = bank;
-			// console.log(newRow);
-			t.appendChild(newRow);
-
-			var label = document.createElement("span");
-			label.className = "rlabel";
-			label.innerHTML= "USB CC Number ";
-			
-			for (var col = 0; col < 16; col++) {
-				var newCell = document.createElement("input");
-//					newRow.appendChild(newCell);
-
-				newCell.row = bank;
-				newCell.col = col;
-				newCell.setAttribute("type", "number");
-				newCell.setAttribute("min", "1");
-				newCell.setAttribute("max", "127");
-				newCell.setAttribute("id", (z));
-				newCell.setAttribute("value", midiDevice.data[z]);
-				newCell.setAttribute("class", "ccbox");
-
-				newRow.appendChild(newCell);
-				z++;
-			}
-			newRow.appendChild(label);
-
-			// TRS Channel ROW
-			var x = 73;
-			var newRow = document.createElement("dd");
-			newRow.className = "row1";
-			newRow.row = bank;
-			// console.log(newRow);
-			t.appendChild(newRow);
-
-			var label = document.createElement("span");
-			label.className = "rlabel";
-			label.innerHTML= "TRS CC Channel ";
-			
-			for (var col = 0; col < 16; col++) {
-				var newCell = document.createElement("input");
-				newCell.row = bank;
-				newCell.col = col;
-				newCell.setAttribute("type", "number");
-				newCell.setAttribute("min", "1");
-				newCell.setAttribute("max", "16");
-				newCell.setAttribute("id", (x));
-				newCell.setAttribute("value", midiDevice.data[x]);
-				newCell.setAttribute("class", "ccbox");
-				
-				newRow.appendChild(newCell);
-				x++;
-			}
-			newRow.appendChild(label);
-		
-			// TRS CC ROW
-			var z = 41;
-			var newRow = document.createElement("dd");
-			newRow.className = "row2";
-			newRow.row = bank;
-			// console.log(newRow);
-			t.appendChild(newRow);
-
-			var label = document.createElement("span");
-			label.className = "rlabel";
-			label.innerHTML= "TRS CC Number ";
-			
-			for (var col = 0; col < 16; col++) {
-				var newCell = document.createElement("input");
-//					newRow.appendChild(newCell);
-
-				newCell.row = bank;
-				newCell.col = col;
-				newCell.setAttribute("type", "number");
-				newCell.setAttribute("min", "1");
-				newCell.setAttribute("max", "127");
-				newCell.setAttribute("id", (z));
-				newCell.setAttribute("value", midiDevice.data[z]);
-				newCell.setAttribute("class", "ccbox");
-
-				newRow.appendChild(newCell);
-				z++;
-			}
-			newRow.appendChild(label);
-
-
-			var z = 25;
-			var newRow = document.createElement("dd");
-			newRow.className = "valuerow";
-			newRow.row = bank;
-			// console.log(newRow);
-			t.appendChild(newRow);
-			var valuediv = document.createElement("div");
-			newRow.appendChild(valuediv);
-			valuediv.className = "valuediv";
-			
-			var label = document.createElement("span");
-			label.className = "rlabel";
-			label.innerHTML= "Values";
-			
-			for (var col = 0; col < 16; col++) {
-				var newCell = document.createElement("span");
-
-				newCell.setAttribute("id", "ccval"+midiDevice.data[z]);
-				newCell.innerHTML = 0;
-				newCell.setAttribute("class", "ccval");
-
-				valuediv.appendChild(newCell);
-				z++;
-			}
-			valuediv.appendChild(label);
-
-			main.appendChild(t);
-
-// 			var ee = document.createElement("input");
-// 			ee.setAttribute("type", "hidden");
-// 			ee.setAttribute("id", "bank");
-// 			ee.setAttribute("value", bank);
-// 			main.appendChild(ee);
-
-		}
 
 			if (midiDevice.model == null) {
 				status.style.color = "grey";
