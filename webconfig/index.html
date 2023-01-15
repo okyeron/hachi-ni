@@ -272,7 +272,7 @@
 			newCell.setAttribute("max", "16");
 			newCell.setAttribute("oninput","validateMaxOne(this)")
 			newCell.setAttribute("id", (x));
-			newCell.setAttribute("value", midiDevice.data[x]);
+			newCell.setAttribute("value", midiDevice.data[x]+1);
 			newCell.setAttribute("class", "ccbox");
 			
 			newRow.appendChild(newCell);
@@ -332,7 +332,7 @@
 			newCell.setAttribute("max", "16");
 			newCell.setAttribute("oninput","validateMaxOne(this)")
 			newCell.setAttribute("id", (x));
-			newCell.setAttribute("value", midiDevice.data[x]);
+			newCell.setAttribute("value", midiDevice.data[x]+1);
 			newCell.setAttribute("class", "ccbox");
 			
 			newRow.appendChild(newCell);
@@ -434,8 +434,10 @@
 			for (var bytes = 25; bytes < 89; bytes++) {
 				const cellval = document.getElementById(bytes);
 				var tempval = Number(cellval.value);
-// 					tempval = Number(cellval.value) - 1;
-
+				// fix channels which are 1 based
+				if (bytes > 56 ){
+ 					tempval = Number(cellval.value) - 1;
+				}
 				outbound = outbound + " " + tempval.toString(16);
 			}
 			outbound = outbound + " F7";
