@@ -345,14 +345,13 @@ void sendControlChange(byte channel, byte control, byte value) {
 }
 
 void onProgramChange(byte channel, byte program) {
-	Serial.print (channel);
-	Serial.print (":");
-	Serial.println (program);
+//	Serial.print (channel);
+//	Serial.print (":");
+//	Serial.println (program);
 	activeBank = constrain(program, 0, numBanks-1);
 	pixelsOff();
 	pixels.setPixelColor(activeBank+1, 128, 0, 0);
 	pixels.show();
-//	sendCurrentState();
 	
 //	USBMIDI.sendProgramChange(program, channel);
 //	HWMIDI.sendProgramChange(program, channel);
@@ -521,16 +520,38 @@ void initCCbanks(){
 }
 
 void printCCBanks(){
- for( int j=0; j < numBanks; j++ ) {
- 		for( int i=0; i< numKnobs; i++ ) {
+	for( int j=0; j < numBanks; j++ ) {
+		for( int i=0; i< numKnobs; i++ ) {
 			Serial.print(j);
-			Serial.print(":trs:");
+			Serial.print(":usb:");
 			Serial.print(i);
 			Serial.print(":");
-			Serial.println(ccBanks[j].trsCC[i]);
+			Serial.println(ccBanks[j].usbCC[i]);
 		}
- }
-
+	}
+	for( int k=0; k < numBanks; k++ ) {
+		for( int h=0; h< numKnobs; h++ ) {
+			Serial.print(k);
+			Serial.print(":trs:");
+			Serial.print(h);
+			Serial.print(":");
+			Serial.println(ccBanks[k].trsCC[h]);
+		}
+	}
+}
+void printOneCCBank(int bank){
+	for( int j=0; j < numKnobs; j++ ) {
+			Serial.print(j);
+			Serial.print(" usb:");
+			Serial.print(ccBanks[bank].usbCC[j]);
+			Serial.print(":");
+			Serial.print(ccBanks[bank].usbChannel[j]);
+			Serial.print(" - ");
+			Serial.print("trs:");
+			Serial.print(ccBanks[bank].trsCC[j]);
+			Serial.print(":");
+			Serial.println(ccBanks[bank].trsChannel[j]);
+	}
 }
 
 // SYSEX
@@ -549,13 +570,13 @@ void processIncomingSysex(const uint8_t* sysexData, unsigned size) {
 	switch(sysexData[4]) {
 		case INFO:
 			// 1F = "1nFo" - please send me your current config
-			Serial.println("Got an 1nFo request");
+//			Serial.println("Got an 1nFo request");
 			sendCurrentState();
 			break;
 		case CONFIG_EDIT:
 			// 0E - c0nfig Edit - here is a new config
- 			Serial.println("Got an c0nfig Edit");
-			// this->updateAllSettingsAndStore(sysexData, size);
+// 			Serial.println("Got an c0nfig Edit");
+ 			saveConfigSettings( sysexData, size );
 			break;
 		case CONFIG_DEVICE_EDIT:
 			// 0D - c0nfig Device edit - new config just for device opts
@@ -578,6 +599,34 @@ void processIncomingSysex(const uint8_t* sysexData, unsigned size) {
 //			break;
 	}
 }
+
+void saveConfigSettings(const uint8_t* configFromSysex, int configDataLength) {
+	// 
+	int bank = configFromSysex[9];
+	int offset = 8;
+	int settingsoffset = 16;
+
+	int j = offset + settingsoffset + 1;
+	
+	for (int k = 0; k < 16; k++) {
+		ccBanks[bank].usbCC[k] = configFromSysex[j] ;
+		j = j+1;
+	}
+	for (int k = 0; k < 16; k++) {
+		 ccBanks[bank].trsCC[k] = configFromSysex[j];
+		j = j+1;
+	}
+	for (int k = 0; k < 16; k++) {
+		ccBanks[bank].usbChannel[k] = configFromSysex[j];
+		j = j+1;
+	}
+	for (int k = 0; k < 16; k++) {
+		ccBanks[bank].trsChannel[k] = configFromSysex[j];
+		j = j+1;
+	}
+//	printOneCCBank(bank);
+}
+
 void sendCurrentState() {
 	//   0F - "c0nFig" - outputs its config:
 	int offset = 8;
