@@ -1,6 +1,6 @@
 /*
 // Hachi x Ni (8x2) MIDI Controller
-// v0.5
+// v0.6
 // by Steven Noreyko
 //
 
@@ -388,7 +388,7 @@ void stopClock(){
 
 // Write all CC settings to memory
 void config_write() {
-    Serial.println("config_write");
+//    Serial.println("config_write");
     DynamicJsonDocument doc(12672); // assistant said 12672
     for( int j=0; j < numBanks; j++ ) {
         JsonArray banks = doc.createNestedArray();
@@ -421,12 +421,12 @@ void config_write() {
 
 // Read all CC settings to memory
 bool config_read() {
-    Serial.println("config_read");
+//    Serial.println("config_read");
 
     File f = LittleFS.open( save_file, "r");
     String s = f.readStringUntil('\n');
     f.close();
-    Serial.println("  contents:"); Serial.println(s);
+//    Serial.println("  contents:"); Serial.println(s);
 
     File file = LittleFS.open( save_file, "r");
     if( !file ) {
@@ -449,11 +449,6 @@ bool config_read() {
 		JsonArray usb = bank[0];
 		JsonArray trs = bank[1];
 		for( int i=0; i< numKnobs; i++ ) {
-			// Serial.print(j);
-			// Serial.print(":usb:");
-			// Serial.print(i);
-			// Serial.print(":");
-			// Serial.println(usb[i][0].as<int>());
 			ccBanks[j].usbCC[i] = usb[i][0].as<int>();
 			ccBanks[j].usbChannel[i] = usb[i][1].as<int>();
 			ccBanks[j].trsCC[i] = trs[i][0].as<int>();
@@ -464,12 +459,11 @@ bool config_read() {
 			// trsChannel[i]
 		}
 	}
-        // Serial.println(" ");
     file.close();
 	return true;
 }
 
-// Load a single config
+// Load a single config - DOESNT DO ANYTHING (YET?)
 void config_load(int config_num) {
     Serial.printf("config_load:%d\n", config_num);
     for( int i=0; i< numKnobs; i++) {
@@ -479,12 +473,12 @@ void config_load(int config_num) {
 }
 
 // Store current config to storage
-void config_save(int config_num) {
-    Serial.printf("config_save:%d\n", config_num);
-    for( int i=0; i< numKnobs; i++) {
-//         sequences[config_num][i] = seqr.steps[i];
-    }
-}
+//void config_save(int config_num) {
+//    Serial.printf("config_save:%d\n", config_num);
+//    for( int i=0; i< numKnobs; i++) {
+////         sequences[config_num][i] = seqr.steps[i];
+//    }
+//}
 
 void pixelsOff(){
 	for( int i=0; i< numLEDS; i++) {
@@ -558,7 +552,7 @@ void printOneCCBank(int bank){
 
 void processIncomingSysex(const uint8_t* sysexData, unsigned size) {
 	if(size < 3) {
-		Serial.println("That's an empty sysex");
+//		Serial.println("That's an empty sysex");
 		return;
 	}
 	// F0 7D 00 00
@@ -577,10 +571,11 @@ void processIncomingSysex(const uint8_t* sysexData, unsigned size) {
 			// 0E - c0nfig Edit - here is a new config
 // 			Serial.println("Got an c0nfig Edit");
  			saveConfigSettings( sysexData, size );
+ 			config_write();
 			break;
 		case CONFIG_DEVICE_EDIT:
 			// 0D - c0nfig Device edit - new config just for device opts
- 			Serial.println("Got an c0nfig Device Edit");
+// 			Serial.println("Got an c0nfig Device Edit");
 			// this->updateDeviceSettingsAndStore(sysexData, size);
 			break;
 		default:
