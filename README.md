@@ -38,3 +38,20 @@ CD74HC4067          // https://github.com/waspinator/CD74HC4067
 ResponsiveAnalogRead    // https://damienclarke.me/#responsiveanalogread
 LittleFS
 avdweb_Switch    // https://github.com/avandalen/avdweb_Switch ( not in library manager - needs to be manually installed)
+
+---
+
+# Web Editor 
+
+---
+
+# FAQ
+
+Q: The 8x2 is not showing up as a MIDI device on the computer.  
+A: Make sure the power switch is 'on' - which is switched to the right.  
+
+Q: How do I load firmware?  
+A: The top plate has two holes for the Reset and BootSel buttons. Reset is closest to the USB jack. To enter the bootloader mode, press both the buttons and release the BootSel button slightly after Reset. Alternately you can hold BootsSel and turn the power switch off/on.  This should drop into bootloader mode. A RPI-RP2 drive will show up on the computer - drag and drop the firmware UF2 file onto the RPI-RP2 drive. The drive should unmount and 8x2 will reboot into the new firmware.  
+
+Q: I'm stuck in the bootloader RPI-RP2 mode, what do I do?  
+A: Unmount the RPI-RP2 drive from the computer and switch the 8x2 off and on again. This should boot into the normal firmware.  
