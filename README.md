@@ -10,7 +10,7 @@ MIDI I/O
 
 Power
 * USB-C
-* Lipo Battery
+* Lipo Battery (optional)
 
 Hacking
 * RP2040 processor
@@ -43,6 +43,8 @@ avdweb_Switch    // https://github.com/avandalen/avdweb_Switch ( not in library 
 
 # Web Editor 
 
+Use Chrome or Edge. Firefox or Safari will not work.
+
 ---
 
 # FAQ
@@ -55,3 +57,4 @@ A: The top plate has two holes for the Reset and BootSel buttons. Reset is close
 
 Q: I'm stuck in the bootloader RPI-RP2 mode, what do I do?  
 A: Unmount the RPI-RP2 drive from the computer and switch the 8x2 off and on again. This should boot into the normal firmware.  
+
