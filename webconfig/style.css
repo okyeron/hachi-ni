@@ -1,0 +1,130 @@
+	html, body {
+	  margin: 0;
+	  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	}
+
+	header {
+	  display: flex;
+	  border-bottom: 1px solid #ddd;
+	  padding: 4px;
+	  font-family: system-ui, sans-serif;
+	}
+
+	header > * {
+	  margin: 4px;
+	  cursor: pointer;
+	}
+
+	header #title {
+	  flex: 1;
+	  color: inherit;
+	  font-weight: bold;
+	  text-decoration: inherit;
+	}
+	status {
+		margin-left: 3em;
+	}
+	
+	input, button, select, textarea {
+		font-family: inherit;
+		font-size: inherit;
+		text-align: center;
+		padding: 0.4em;
+		margin: 0 0 0.5em 0;
+		box-sizing: border-box;
+		border: 1px solid #ccc;
+		border-radius: 2px;
+	}
+	input.channelbox, input.ccbox {
+		width: 3em;
+	}
+	span.ccval {
+		display: inline-block;
+		font-family: inherit;
+		font-size: inherit;
+		text-align: center;
+		margin: 0 0 0.5em 0;
+		box-sizing: border-box;
+		border: 1px solid #FFF;
+		border-bottom: 1px solid #CCC;
+		border-radius: 2px;
+		width: 3em;
+		height:0px;
+		
+	}
+	.valuediv{
+/* 
+		display:block;
+		position:absolute;
+		width:100%
+ */
+		display: flex;
+		height: 140px;
+		align-items: flex-end;
+    	align-content: flex-end;
+    	
+    	}
+	dl {
+		display: block;
+		margin-block-start: 1em;
+		margin-block-end: 0.1em;
+		margin-inline-start: 0px;
+		margin-inline-end: 0px;
+		text-align: left;
+	}
+	dd {
+		display: block;
+		padding: 0 0 0.5rem 0;
+		margin: 0;
+		margin-right: 5px;
+		margin-inline-start: 40px;
+	}
+	dd.row1 {
+		padding: 0 0 0 0;
+	}
+	dd.row2 {
+		padding: 0 0 1rem 0;
+	}
+	dd.valuerow{
+		position: relative;
+		height:140px;
+	}
+	dt.index {
+		background: #666;
+		color: #f0f0f0;
+		padding: 0.5rem 0;
+		margin-right: 5px;
+	}
+	.rlabel{
+		padding: 0.4em;
+		margin: 0 0 0.5em 0;
+	}
+	#controls {
+		display: flex;
+		min-width: calc(16 * 60px);
+	}
+	#main {
+	  padding: 8px;
+	}
+	#nav {
+		margin-inline-start: 40px;
+		padding: 8px;
+	}
+	button.svelte-1gcivh1 {
+	text-align: left;
+	border-radius: 5px;
+	display: inline-block;
+	}
+	.fas {
+	font-family: "Font Awesome 5 Free";
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
+	display: inline-block;
+	font-style: normal;
+	font-variant: normal;
+	text-rendering: auto;
+	line-height: 1;
+	}
+	.fa-file-import:before {
+		content: "\f56f";
+	}

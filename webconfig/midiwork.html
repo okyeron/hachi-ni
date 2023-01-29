@@ -1,0 +1,148 @@
+<html>
+  <head>
+    <script>
+
+      const state = {
+        midiAccess: null,
+        midiInputPort: null,
+        midiOutputPort: null,
+
+      };
+
+      const setup = async () => {
+        navigator.requestMIDIAccess({ sysex: true }).then((midiAccess) => {
+
+			console.log('MIDI Access established', midiAccess);
+			state.midiAccess = midiAccess;
+
+				const signature = raw("f0 7d 00 00 0F");
+
+				const midiInput = midiAccess.inputs.values().next().value;
+				midiInput.onmidimessage = (e) => {
+// 					console.log('MIDI Message', e.data);
+
+					const cmd = e.data[0];
+					const type = e.data[0] & 0xf0;
+					const channel =  e.data[0] & 0xf;
+					const cntrl = e.data[1];
+					const cntrlvalue = e.data[2];
+
+					if (match(signature, e.data)){
+						const command = e.data[4];
+						const modelnum = e.data[5];
+						const model = ({0x03: "8x2"})[e.data[5]];
+						const ver = e.data[6];
+						const version = e.data[6] + "." + e.data[7] + "." + e.data[8];
+						const bank = e.data[9];
+						const eeprom_version = e.data[10];
+
+						const usbccstart = 25;
+						const trsccstart = 41;
+						const usbchanstart = 57;
+						const trschanstart = 73;
+
+						let usbccs = [];
+						let trsccs = [];
+						let usbchans = [];
+						let trschans = [];
+						for (var k = usbccstart; k < usbccstart+16; k++) {
+							usbccs.push(e.data[k])
+						}
+						for (var h = trsccstart; h < trsccstart+16; h++) {
+							trsccs.push(e.data[h])
+						}
+						for (var i = usbchanstart; i < usbchanstart+16; i++) {
+							usbchans.push(e.data[i])
+						}
+						for (var j = trschanstart; j < trschanstart+16; j++) {
+							trschans.push(e.data[j])
+						}
+						
+						console.log('usbccs', usbccs);
+						console.log('trsccs', trsccs);
+						console.log('usbchans', usbchans);
+						console.log('trschans', trschans);
+// 						console.log('matched?', model);
+					}
+					if (type == 176){
+						console.log('cntrl: '+ cntrl + ":"+ cntrlvalue);
+// 						controller( cntrl, cntrlvalue );
+					}
+
+				};
+				const midiOutput = midiAccess.outputs.values().next().value;
+				if (midiOutput.state === 'connected' && midiOutput.type === 'output') {
+// 					console.log('send sysex handshake');
+					midiOutput.send([0xf0, 0x7d, 0x00, 0xf7]);
+				}
+			
+// 			midiAccess.addEventListener('statechange', (e) => {
+// 			});
+
+          midiAccess.onstatechange = (e) => {
+				console.log('MIDI State Change', e.port.type, e.port.state);
+
+				if (e.port.state === 'connected' && e.port.type === 'input') {
+				  const midiInput = midiAccess.inputs.values().next().value;
+				}
+
+				if (e.port.state === 'connected' && e.port.type === 'output') {
+				  const midiOutput = midiAccess.outputs.values().next().value;
+				  midiOutput.send([0xf0, 0x7d, 0x00, 0x00, 0x1f, 0xf7]);
+				}
+          };
+          
+        });
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('Initializing Page...');
+        setup();
+      });
+	
+
+	function hex(data) {
+	  return data.reduce(function(s, x) {
+		return s + " " + x.toString(16).padStart(2, "0");
+	  }, "").slice(1);
+	}
+
+	function raw(line) {
+	  const words = line.split(/\s+/).filter(Boolean);
+	  const bytes = words.map(x => Number("0x" + x));
+	  return bytes.map(x => isNaN(x) || x > 0xff ? null : x);
+	}
+
+	function match(pattern, data) {
+	  if (pattern == null || data.length < pattern.length)
+		return false;
+	  for (let index = 0; index < pattern.length; index++)
+		if (pattern[index] != null && pattern[index] != data[index])
+		  return false;
+	  return true;
+	}
+
+
+
+    </script>
+    <link href="style.css" rel="stylesheet">
+  </head>
+  
+	<body>
+		<header>
+			<div id="title">8x2 Config</div>
+			<span id="status"></span>
+		</header>
+		<div id="main">
+		</div>
+		<div id="nav">
+<!-- 
+		<button id="saveconfig"><span class="fas fa-file-import"></span>
+			Save Config
+		</button>
+ -->
+		<span id="alert"></span>
+		</div>
+	</body>
+
+</html>
