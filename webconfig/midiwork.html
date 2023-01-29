@@ -27,7 +27,9 @@
 					const cntrl = e.data[1];
 					const cntrlvalue = e.data[2];
 
+					// Check the sysex data to see if it matches a config message
 					if (match(signature, e.data)){
+						// store some variables
 						const command = e.data[4];
 						const modelnum = e.data[5];
 						const model = ({0x03: "8x2"})[e.data[5]];
@@ -64,15 +66,18 @@
 						console.log('trschans', trschans);
 // 						console.log('matched?', model);
 					}
+
+					// if CC message do things
 					if (type == 176){
+						// function to show knob inputs here
 						console.log('cntrl: '+ cntrl + ":"+ cntrlvalue);
-// 						controller( cntrl, cntrlvalue );
+// 						showcontroller( cntrl, cntrlvalue );
 					}
 
 				};
 				const midiOutput = midiAccess.outputs.values().next().value;
 				if (midiOutput.state === 'connected' && midiOutput.type === 'output') {
-// 					console.log('send sysex handshake');
+					// send some random sysex to open the output port 
 					midiOutput.send([0xf0, 0x7d, 0x00, 0xf7]);
 				}
 			
@@ -88,6 +93,8 @@
 
 				if (e.port.state === 'connected' && e.port.type === 'output') {
 				  const midiOutput = midiAccess.outputs.values().next().value;
+
+				  // send sysex query to get config from device
 				  midiOutput.send([0xf0, 0x7d, 0x00, 0x00, 0x1f, 0xf7]);
 				}
           };
