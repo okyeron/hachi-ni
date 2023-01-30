@@ -50,7 +50,7 @@ Use Chrome or Edge. Firefox or Safari will not work.
 # Hardware notes/links
 
 Pots: use 10Kb or B10K (linear, 10Kohms)  
-Standard modular "Alpha Single-Gang 9mm Right-Angle PC Mount" are what you want.  
+Standard modular "Alpha Single-Gang 9mm PC Mount" (aka "vertical") are what you want.  
 Shaft type will likely depend on your knob choice. D-shaft, T-18 or Round - This is up to you.  
 
 Links:  
