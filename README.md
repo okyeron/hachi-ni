@@ -47,6 +47,25 @@ Use Chrome or Edge. Firefox or Safari will not work.
 
 ---
 
+# Hardware notes/links
+
+Pots: 10Kb or B10K (linear, 10Kohms) 
+Standard modular "Alpha Single-Gang 9mm Right-Angle PC Mount".
+Shaft type will likely depend on your knob choice. D-shaft, T-18 or Round - This is up to you.
+
+Links:  
+https://modularaddict.com/9mm-d-shaft-vertical-potentiometers  
+https://modularaddict.com/9mm-t18-shaft-vertical-potentiometers  
+https://www.thonk.co.uk/shop/alpha-9mm-pots-dshaft/  
+https://www.thonk.co.uk/shop/alpha-9mm-pots-vertical-t18/  
+
+
+Knob options/suggestions:  
+https://www.adafruit.com/product/5093  
+https://modularaddict.com/re-an-p670-frac-style-16mm-soft-touch-knob-d-shaft  
+
+---
+
 # FAQ
 
 Q: The 8x2 is not showing up as a MIDI device on the computer.  
