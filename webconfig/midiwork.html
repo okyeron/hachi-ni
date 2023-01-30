@@ -54,17 +54,27 @@
 							trsccs.push(e.data[h])
 						}
 						for (var i = usbchanstart; i < usbchanstart+16; i++) {
-							usbchans.push(e.data[i])
+							usbchans.push(e.data[i]+1)
 						}
 						for (var j = trschanstart; j < trschanstart+16; j++) {
-							trschans.push(e.data[j])
+							trschans.push(e.data[j]+1)
 						}
 						
-						console.log('usbccs', usbccs);
-						console.log('trsccs', trsccs);
-						console.log('usbchans', usbchans);
-						console.log('trschans', trschans);
-// 						console.log('matched?', model);
+						var dlblock1 = "CC";
+						makerowcontainer (dlblock1)
+						makecellsrow(usbchans, usbchanstart, "USB Channels", dlblock1);
+						makecellsrow(usbccs, usbccstart, "USB CCs", dlblock1);
+
+						var dlblock2 = "TRS";
+						makerowcontainer (dlblock2)
+						makecellsrow(trschans, trschanstart, "TRS Channels", dlblock2);
+						makecellsrow(trsccs, trsccstart, "TRS CCs", dlblock2);
+						
+// 						console.log('usbccs', usbccs);
+// 						console.log('trsccs', trsccs);
+// 						console.log('usbchans', usbchans);
+// 						console.log('trschans', trschans);
+
 					}
 
 					// if CC message do things
@@ -128,8 +138,45 @@
 		  return false;
 	  return true;
 	}
+	function validateMaxOne(object) {
+		if (object.max) object.value = Math.min(parseInt(object.max), parseInt(object.value) || 1);
+	}
+	function validateMaxZero(object) {
+		if (object.max) object.value = Math.min(parseInt(object.max), parseInt(object.value) || 0);
+	}
 
+	function makerowcontainer (id){
+		var t = document.createElement("dl");
+		t.id = id;
+		main.appendChild(t);
+	}
 
+	function makecellsrow(data_array, idstart, description, container){
+
+			const t = document.getElementById(container);
+		
+			var newRow = document.createElement("dd");
+			newRow.className = "row1";
+			t.appendChild(newRow);
+
+			var label = document.createElement("span");
+			label.className = "rlabel";
+			label.innerHTML= description;
+		
+			for (var col = 0; col < 16; col++) {
+				var newCell = document.createElement("input");
+				newCell.setAttribute("type", "number");
+				newCell.setAttribute("min", "0");
+				newCell.setAttribute("max", "127");
+				newCell.setAttribute("oninput","validateMaxZero(this)")
+				newCell.setAttribute("id", (idstart + col));
+				newCell.setAttribute("value", data_array[col]);
+				newCell.setAttribute("class", "ccbox");
+
+				newRow.appendChild(newCell);
+			}
+			newRow.appendChild(label);
+	}
 
     </script>
     <link href="style.css" rel="stylesheet">
