@@ -14,11 +14,16 @@
 
 			console.log('MIDI Access established', midiAccess);
 			state.midiAccess = midiAccess;
+			
+			const signature = raw("f0 7d 00 00 0F");
 
-				const signature = raw("f0 7d 00 00 0F");
+			if (midiAccess.inputs.size == 0 ){
+				return;
+			}
+			const midiInput = midiAccess.inputs.values().next().value;
 
-				const midiInput = midiAccess.inputs.values().next().value;
-				midiInput.onmidimessage = (e) => {
+			if (midiInput.state === 'connected' && midiInput.type === 'input') {
+					midiInput.onmidimessage = (e) => {
 // 					console.log('MIDI Message', e.data);
 
 					const cmd = e.data[0];
@@ -59,7 +64,7 @@
 						for (var j = trschanstart; j < trschanstart+16; j++) {
 							trschans.push(e.data[j]+1)
 						}
-						
+					
 						var dlblock1 = "CC";
 						makerowcontainer (dlblock1)
 						makecellsrow(usbchans, usbchanstart, "USB Channels", dlblock1);
@@ -69,7 +74,7 @@
 						makerowcontainer (dlblock2)
 						makecellsrow(trschans, trschanstart, "TRS Channels", dlblock2);
 						makecellsrow(trsccs, trsccstart, "TRS CCs", dlblock2);
-						
+					
 // 						console.log('usbccs', usbccs);
 // 						console.log('trsccs', trsccs);
 // 						console.log('usbchans', usbchans);
@@ -85,25 +90,29 @@
 					}
 
 				};
-				const midiOutput = midiAccess.outputs.values().next().value;
+			}
+			
+			const midiOutput = midiAccess.outputs.values().next().value;
+			if (midiOutput){
 				if (midiOutput.state === 'connected' && midiOutput.type === 'output') {
 					// send some random sysex to open the output port 
 					midiOutput.send([0xf0, 0x7d, 0x00, 0xf7]);
 				}
+			}
 			
 // 			midiAccess.addEventListener('statechange', (e) => {
 // 			});
 
           midiAccess.onstatechange = (e) => {
 				console.log('MIDI State Change', e.port.type, e.port.state);
-
+				
 				if (e.port.state === 'connected' && e.port.type === 'input') {
 				  const midiInput = midiAccess.inputs.values().next().value;
 				}
 
 				if (e.port.state === 'connected' && e.port.type === 'output') {
 				  const midiOutput = midiAccess.outputs.values().next().value;
-
+// 				  console.log("send sysex query")
 				  // send sysex query to get config from device
 				  midiOutput.send([0xf0, 0x7d, 0x00, 0x00, 0x1f, 0xf7]);
 				}
@@ -146,6 +155,10 @@
 	}
 
 	function makerowcontainer (id){
+		const z = document.getElementById(id);
+		if (z){
+			main.removeChild(z);
+		}
 		var t = document.createElement("dl");
 		t.id = id;
 		main.appendChild(t);
