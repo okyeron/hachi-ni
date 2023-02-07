@@ -29,11 +29,11 @@ Add `https://github.com/earlephilhower/arduino-pico/releases/download/global/pac
 
 
 ### Arduino IDE setup:
- * - Select Tools / Board: Adafruit Feather RP2040  
- * - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)  
- * - Select Tools / USB Stack: Adafruit TinyUSB  
- * - Optional - Tools / Debug Level: Core  
- * - Optional - Tools / Debug Port: Serial  
+ * Select Tools / Board: Adafruit Feather RP2040  
+ * Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)  
+ * Select Tools / USB Stack: Adafruit TinyUSB  
+ * Optional - Tools / Debug Level: Core  
+ * Optional - Tools / Debug Port: Serial  
 
 
 #### Required Libraries
