@@ -39,14 +39,14 @@ Add `https://github.com/earlephilhower/arduino-pico/releases/download/global/pac
 #### Required Libraries
 Install from Arduino Library Manager if possible
 
-Adafruit_NeoPixel   // https://github.com/adafruit/Adafruit_NeoPixel
-Adafruit_TinyUSB    // https://github.com/adafruit/Adafruit_TinyUSB_Arduino
-MIDI			    // https://github.com/FortySevenEffects/arduino_midi_library
-ArduinoJson		    // https://arduinojson.org/
-CD74HC4067          // https://github.com/waspinator/CD74HC4067
-ResponsiveAnalogRead    // https://damienclarke.me/#responsiveanalogread
-LittleFS
-avdweb_Switch    // https://github.com/avandalen/avdweb_Switch ( not in library manager - needs to be manually installed)
+Adafruit_NeoPixel   // https://github.com/adafruit/Adafruit_NeoPixel  
+Adafruit_TinyUSB    // https://github.com/adafruit/Adafruit_TinyUSB_Arduino  
+MIDI			    // https://github.com/FortySevenEffects/arduino_midi_library  
+ArduinoJson		    // https://arduinojson.org/  
+CD74HC4067          // https://github.com/waspinator/CD74HC4067  
+ResponsiveAnalogRead    // https://damienclarke.me/#responsiveanalogread  
+LittleFS  
+avdweb_Switch    // https://github.com/avandalen/avdweb_Switch ( not in library manager - needs to be manually installed)  
 
 ---
 
