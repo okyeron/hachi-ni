@@ -54,7 +54,9 @@ avdweb_Switch    // https://github.com/avandalen/avdweb_Switch ( not in library 
 
 Use Chrome or Edge. Firefox or Safari will not work.
 
-[Web editor ](<webconfig/index.html>)
+Download this repo and load the `webconfig/index.html` locally in your browser.  
+
+[Web editor source](<webconfig/index.html>)
 
 ---
 
