@@ -27,6 +27,15 @@ Install RP2040 Arduino Core - see instructions at https://github.com/earlephilho
 
 Add `https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json` to the "Additional Boards Manager URLs" field in Arduino's Preferences.
 
+
+### Arduino IDE setup:
+ * - Select Tools / Board: Adafruit Feather RP2040  
+ * - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)  
+ * - Select Tools / USB Stack: Adafruit TinyUSB  
+ * - Optional - Tools / Debug Level: Core  
+ * - Optional - Tools / Debug Port: Serial  
+
+
 #### Required Libraries
 Install from Arduino Library Manager if possible
 
