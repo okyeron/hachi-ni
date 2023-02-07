@@ -35,16 +35,16 @@ not implemented ~~"Here is a new set of TRS options for you". Payload (other tha
 
 ## SYSEX Map of config data - 90 bytes
 
-F0 7D 00 00 (4 bytes)
-command (1 byte)
-modelnum (1 byte)
-version (3 bytes) 
-bank (1 byte)
-other settings (15 bytes)
-USB CCs (16 bytes)
-TRS CCs (16 bytes)
-USB Channels (16 bytes)
-TRS Channels (16 bytes)
-F7 (1 byte)
+`F0 7D 00 00` (4 bytes)  
+command (1 byte)  
+modelnum (1 byte)  
+version (3 bytes)   
+bank (1 byte)  
+other settings (15 bytes)  
+USB CCs (16 bytes)  
+TRS CCs (16 bytes)  
+USB Channels (16 bytes)  
+TRS Channels (16 bytes)  
+`F7` (1 byte)  
 
-F0 7D 00 00 0F 03 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F7
+`F0 7D 00 00 0F 03 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F7`
