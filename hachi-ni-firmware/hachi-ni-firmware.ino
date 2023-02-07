@@ -22,7 +22,7 @@
 #include <ResponsiveAnalogRead.h>
 #include <LittleFS.h>
 #include <avdweb_Switch.h>
-
+#include <Adafruit_I2CDevice.h>
 #include "config.h"
 
 
