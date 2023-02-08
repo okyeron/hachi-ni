@@ -35,13 +35,13 @@ not implemented ~~"Here is a new set of TRS options for you". Payload (other tha
 
 ## SYSEX Map of config data - 90 bytes
 
-Status Byte `F0` (SYSEX Start) (1 byte)
+Status Byte `F0` (SYSEX Start) (1 byte)  
 Manufacturer ID `7D 00 00` (3 bytes)  
 Command (1 byte)  
 Modelnum (1 byte)  
 Version (3 bytes)   
 Bank (1 byte)  
-Other settings to be determined (15 bytes)  
+Other settings to be determined (15 bytes)   
 USB CCs (16 bytes)  
 TRS CCs (16 bytes)  
 USB Channels (16 bytes)  
