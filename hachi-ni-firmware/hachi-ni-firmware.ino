@@ -5,7 +5,7 @@
 //
 
 * Arduino IDE setup:
- * - Select Tools / Board: Rasberry Pi Pico
+ * - Select Tools / Board: Adafruit Feather RP2040
  * - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)
  * - Select Tools / USB Stack: Adafruit TinyUSB
  * - Optional - Tools / Debug Level: Core
@@ -22,7 +22,7 @@
 #include <ResponsiveAnalogRead.h>
 #include <LittleFS.h>
 #include <avdweb_Switch.h>
-#include <Adafruit_I2CDevice.h>
+#include <Adafruit_SSD1327.h>
 #include "config.h"
 
 
@@ -45,6 +45,10 @@ ResponsiveAnalogRead *analog[channelCount];
 
 // MUX SETUP
 CD74HC4067 my_mux(mux1, mux2, mux3, mux4);  // create a new CD74HC4067 object with its four control pins
+
+// I2C
+Adafruit_SSD1327 display(128, 128, &Wire1, -1, 1000000);
+
 
 //TR-09 - tune/levels
 // int usbCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
@@ -129,6 +133,13 @@ void setup() {
 
 
 	LittleFS.begin();
+
+	display.begin(0x3D);
+	display.clearDisplay();
+	display.display();
+
+	testfillrect();
+	display.display();
 
 // 	Serial1.setRX(midi_rx_pin);
 //  Serial1.setTX(midi_tx_pin);
@@ -221,14 +232,14 @@ void loop()
 			int tempG = 0; 
 			if (i < 8) {
 				tempG = shiftyTemp*2;
-				pixels.setPixelColor(i+1, tempR, tempG, tempB);
+				// pixels.setPixelColor(i+1, tempR, tempG, tempB);
 			} else {
 				tempG = shiftyTemp; 
 				tempB = shiftyTemp*2;
-				pixels.setPixelColor(i-7, tempR, tempG, tempB);
+				// pixels.setPixelColor(i-7, tempR, tempG, tempB);
 			}
 			
-			
+			knobrect(i, shiftyTemp);
 			// send the message over USB and physical MIDI
 			USBMIDI.sendControlChange(ccBanks[activeBank].usbCC[i], shiftyTemp, ccBanks[activeBank].usbChannel[i]+1);
 			HWMIDI.sendControlChange(ccBanks[activeBank].trsCC[i], shiftyTemp, ccBanks[activeBank].trsChannel[i]+1);
@@ -695,4 +706,26 @@ void readSettingsToArray(uint8_t bank, size_t address, uint8_t buffer[], int len
 		j = j+1;
 	}
 	
+}
+
+void testfillrect(void) {
+  uint8_t color = 1;
+  for (uint8_t i=0; i<display.height()/2; i+=3) {
+    // alternate colors
+    display.fillRect(i, i, display.width()-i*2, display.height()-i*2,  i % 15 + 1);
+    display.display();
+    color++;
+  }
+}
+void testdrawrect(void) {
+  for (uint8_t i=0; i<display.height()/2; i+=2) {
+    display.drawRect(i, i, display.width()-2*i, display.height()-2*i, i % 15 + 1);
+    display.display();
+  }
+}
+void knobrect(int position, int value) {
+    display.fillRect(display.width()-8 -(position * 8), 0, 8, display.height(), 0x000000);
+    display.fillRect(display.width()-8 - (position * 8), 0, 8, value, 0x888888);
+	display.drawRect(display.width()-8 - (position * 8), 0, 8, value, 0xFFFFFF);
+     display.display();
 }
