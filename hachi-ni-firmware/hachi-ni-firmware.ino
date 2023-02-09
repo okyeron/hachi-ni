@@ -92,10 +92,11 @@ void leftButtonCallback(void* s) {
 //   Serial.println((char*)s);
 	activeBank--;
   	activeBank = constrain(activeBank, 0, numBanks-1);
+	USBMIDI.sendProgramChange(activeBank, 1);
 	pixelsOff();
 	pixels.setPixelColor(activeBank+1, 128, 0, 0); // bank pixels are 1-8 not 0-7
 	pixels.show();
-	Serial.println(activeBank);
+	// Serial.println(activeBank);
 }
 
 void rightButtonCallback(void* s) {
@@ -103,10 +104,11 @@ void rightButtonCallback(void* s) {
 //   Serial.println((char*)s);
 	activeBank++;
   	activeBank = constrain(activeBank, 0, numBanks-1);
+	USBMIDI.sendProgramChange(activeBank, 1);
 	pixelsOff();
 	pixels.setPixelColor(activeBank+1, 128, 0, 0);
 	pixels.show();
-	Serial.println(activeBank);
+	// Serial.println(activeBank);
 }
 
 

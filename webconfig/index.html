@@ -167,6 +167,11 @@
 		//			console.log('cntrl: '+ cntrl(event.data) + ":"+ cntrlvalue(event.data));
 					controller( cntrl(event.data), cntrlvalue(event.data) );
 				}
+				if (type(event.data) == 192){ // program change
+// 					console.log('pgchange: '+ cntrl(event.data));
+					// get config
+					midiDevice.output.send(raw("F0 7D 00 00 1F F7"));
+				}
 			}, timeout);
 
 			port.send(identify);
