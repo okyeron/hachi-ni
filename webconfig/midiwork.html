@@ -88,6 +88,12 @@
 						console.log('cntrl: '+ cntrl + ":"+ cntrlvalue);
 // 						showcontroller( cntrl, cntrlvalue );
 					}
+					if (type == 192){ // program change
+	 					console.log('pgchange: '+ cntrl);
+						// get new config
+						midiOutput.send([0xf0, 0x7d, 0x00, 0x00, 0x1f, 0xf7]);
+					}
+					
 
 				};
 			}
