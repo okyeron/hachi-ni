@@ -131,15 +131,7 @@ void setup() {
 	pinMode(NEOPWRPIN, OUTPUT); // NEOPWR Pin
 	digitalWrite(NEOPWRPIN, HIGH);	// Turn NEOPWR ON
 
-
 	LittleFS.begin();
-
-	display.begin(0x3D);
-	display.clearDisplay();
-	display.display();
-
-	testfillrect();
-	display.display();
 
 // 	Serial1.setRX(midi_rx_pin);
 //  Serial1.setTX(midi_tx_pin);
@@ -177,6 +169,13 @@ void setup() {
 
 	Serial.println("MIDI Test");
 	
+	display.begin(0x3D);
+	display.clearDisplay();
+	display.display();
+
+	testfillrect();
+	display.display();
+
 	// Button setup
 	// leftButton.setPushedCallback(&leftButtonCallback, (void*)"turned on");
 	// leftButton.setReleasedCallback(&leftButtonCallback, (void*)"turned off");
