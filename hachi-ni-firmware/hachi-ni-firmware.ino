@@ -5,7 +5,7 @@
 //
 
 * Arduino IDE setup:
- * - Select Tools / Board: Adafruit Feather RP2040
+ * - Select Tools / Board: Raspberry Pi Pico
  * - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)
  * - Select Tools / USB Stack: Adafruit TinyUSB
  * - Optional - Tools / Debug Level: Core
