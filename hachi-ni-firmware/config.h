@@ -8,10 +8,10 @@
 
 /* * firmware metadata  */
 const int MAJOR_VERSION = 0;
-const int MINOR_VERSION = 6;
+const int MINOR_VERSION = 7;
 const int POINT_VERSION = 0;
 
-const int DEVICE_ID     = 3;
+const int DEVICE_ID     = 5;
 
 // Increment this when data layout in EEPROM changes. May need to write version upgrade readers when this changes.
 extern const uint8_t EEPROM_VERSION;
