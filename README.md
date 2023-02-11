@@ -1,4 +1,4 @@
-# 八x二　aka hachi x ni aka 8x2
+# 八x二　aka "hachi-ni" or "8x2"
 
 八x二 (8x2) is a compact midi controller with 16 potentiometers, 2 buttons, and 8 RGB leds.
 
@@ -18,6 +18,19 @@ Hacking
 * Breakout connections for 3 analog (A0, A1, A2) and 3 digital pins (D4, D11, D12)
 
 --- 
+## How to load firmware
+
+Firmware is available on the [Release pages](https://github.com/okyeron/hachi-ni/releases) here as a UF2 file.  
+
+[UF2 info from adafruit...](https://learn.adafruit.com/getting-started-with-raspberry-pi-pico-circuitpython)  
+> Inside the RP2040 is a 'permanent ROM' USB UF2 bootloader. What that means is when you want to program new firmware, you can hold down the BOOTSEL button while plugging it into USB (or pulling down the RUN/Reset pin to ground) and it will appear as a USB disk drive you can drag the firmware onto. Folks who have been using Adafruit products will find this very familiar - we use the technique on all our native-USB boards. Just note you don't double-click reset, instead hold down BOOTSEL during boot to enter the bootloader!  
+
+On hachi-ni, you have both a BOOTSEL and a RESET button. These are under the holes on the right side of the top panel. The hole closest to the USB is RESET. The hole farther away is BOOTSEL. To access the buttons, insert the bespoke bamboo switch actuators (toothpicks) included with your kit.  
+
+To enter the UF2 bootloader mode, hold BOOTSEL then press and release RESET and then release BOOTSEL. Alternately you can hold BOOTSEL and then toggle the power switch from off to on then release BOOTSEL.  
+
+--- 
+## How to compile the firmware yourself
 
 ### PlatformIO
 Things should be properly configured in the repo to directly compile with PlatformIO
@@ -29,7 +42,7 @@ Add `https://github.com/earlephilhower/arduino-pico/releases/download/global/pac
 
 
 ### Arduino IDE setup:
- * Select Tools / Board: Adafruit Feather RP2040  
+ * Select Tools / Board: Raspberry Pi Pico  
  * Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)  
  * Select Tools / USB Stack: Adafruit TinyUSB  
  * Optional - Tools / Debug Level: Core  
