@@ -27,9 +27,9 @@ Firmware is available on the [Release pages](https://github.com/okyeron/hachi-ni
 
 On __hachi-ni__, you have both a BOOTSEL and a RESET button. These are under the holes on the right side of the top panel. The hole closest to the USB is RESET. The hole farther away is BOOTSEL. To access the buttons, insert the bespoke bamboo switch actuators (toothpicks) included with your kit.  
 
-To enter the UF2 bootloader mode, hold BOOTSEL then press and release RESET and then release BOOTSEL. Alternately you can hold BOOTSEL and then toggle the power switch from off to on then release BOOTSEL.  
+To enter the UF2 bootloader mode, hold BOOTSEL then press and release RESET and then release BOOTSEL. Alternately you can hold BOOTSEL and then toggle the power switch from off to on then release BOOTSEL. This should drop into UF2 bootloader mode.  
 
-After the UF2 is dragged onto the USB disk drive, the device should automatically restart.  
+A RPI-RP2 drive will show up on the computer - drag and drop the firmware UF2 file onto the RPI-RP2 drive. After the UF2 is dragged onto the USB disk drive, the device should automatically restart with the new firmware.    
 
 --- 
 ## How to compile the firmware yourself
@@ -105,7 +105,7 @@ Q: The 8x2 is not showing up as a MIDI device on the computer.
 A: Make sure the power switch is 'on' - which is switched to the right.  
 
 Q: How do I load firmware?  
-A: The top plate has two holes for the Reset and BootSel buttons. Reset is closest to the USB jack. To enter the bootloader mode, press both the buttons (using the enclosed toothpicks) and release the BootSel button slightly after Reset. Alternately you can hold BootsSel and turn the power switch off/on.  This should drop into bootloader mode. A RPI-RP2 drive will show up on the computer - drag and drop the firmware UF2 file onto the RPI-RP2 drive. The drive should unmount and 8x2 will reboot into the new firmware.  
+A: [See above](https://github.com/okyeron/hachi-ni#how-to-load-firmware)  
 
 Q: I'm stuck in the bootloader RPI-RP2 mode, what do I do?  
 A: Unmount the RPI-RP2 drive from the computer and switch the 8x2 off and on again. This should boot into the normal firmware.  
