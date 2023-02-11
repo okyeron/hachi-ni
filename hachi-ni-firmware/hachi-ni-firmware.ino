@@ -49,7 +49,6 @@ CD74HC4067 my_mux(mux1, mux2, mux3, mux4);  // create a new CD74HC4067 object wi
 // I2C
 Adafruit_SSD1327 display(128, 128, &Wire1, -1, 1000000);
 
-
 //TR-09 - tune/levels
 // int usbCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
 // int trsCCs[16] = {20,28,46,49,52,59,61,80, 24,29,48,51,54,60,63,82};
@@ -167,8 +166,10 @@ void setup() {
 		delay(1000);
 	}
 
-	Serial.println("MIDI Test");
+	// Serial.println("MIDI Test");
 	
+	Wire1.setSDA(I2C_SDA);
+	Wire1.setSCL(I2C_SCL);
 	display.begin(0x3D);
 	display.clearDisplay();
 	display.display();
