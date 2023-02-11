@@ -20,14 +20,16 @@ Hacking
 --- 
 ## How to load firmware
 
-Firmware is available on the [Release pages](https://github.com/okyeron/hachi-ni/releases) here as a UF2 file.  
+Firmware is available on the [Release pages](https://github.com/okyeron/hachi-ni/releases) as a UF2 file.  
 
 [UF2 info from adafruit...](https://learn.adafruit.com/getting-started-with-raspberry-pi-pico-circuitpython)  
 > Inside the RP2040 is a 'permanent ROM' USB UF2 bootloader. What that means is when you want to program new firmware, you can hold down the BOOTSEL button while plugging it into USB (or pulling down the RUN/Reset pin to ground) and it will appear as a USB disk drive you can drag the firmware onto. Folks who have been using Adafruit products will find this very familiar - we use the technique on all our native-USB boards. Just note you don't double-click reset, instead hold down BOOTSEL during boot to enter the bootloader!  
 
-On hachi-ni, you have both a BOOTSEL and a RESET button. These are under the holes on the right side of the top panel. The hole closest to the USB is RESET. The hole farther away is BOOTSEL. To access the buttons, insert the bespoke bamboo switch actuators (toothpicks) included with your kit.  
+On __hachi-ni__, you have both a BOOTSEL and a RESET button. These are under the holes on the right side of the top panel. The hole closest to the USB is RESET. The hole farther away is BOOTSEL. To access the buttons, insert the bespoke bamboo switch actuators (toothpicks) included with your kit.  
 
 To enter the UF2 bootloader mode, hold BOOTSEL then press and release RESET and then release BOOTSEL. Alternately you can hold BOOTSEL and then toggle the power switch from off to on then release BOOTSEL.  
+
+After the UF2 is dragged onto the USB disk drive, the device should automatically restart.  
 
 --- 
 ## How to compile the firmware yourself
