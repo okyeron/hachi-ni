@@ -69,9 +69,11 @@ avdweb_Switch    // https://github.com/avandalen/avdweb_Switch ( not in library 
 
 Use Chrome or Edge. Firefox or Safari will not work.
 
-https://okyeron.github.io/8x2
+Visit: https://okyeron.github.io/8x2  
 
-Download this repo and load the `webconfig/index.html` locally in your browser.  
+Or...  
+
+ Download this repo and load the `webconfig/index.html` locally in your browser.  
 
 [Web editor source](<webconfig/index.html>)
 
