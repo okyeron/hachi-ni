@@ -196,9 +196,39 @@ void setup() {
 }	
 // END SETUP
 
+
+void plotSineWave(int x, int y) {
+   for(int i = 0; i < 630; i += y) {
+      float y1 = sin((float(i)/100)) * x;
+	  Serial.println(y1);
+	  delay(20);
+   }
+}
 // *** MAIN LOOP ****
 void loop()
 {
+	float tempzero = analog[0]->getValue();
+	tempzero = constrain(tempzero, faderMin, faderMax);
+	tempzero = map(tempzero, faderMin, faderMax, 100, 0);
+	float tempone = analog[1]->getValue();
+	tempone = constrain(tempone, faderMin, faderMax);
+	tempone = map(tempone, faderMin, faderMax, 10, 1);
+
+	plotSineWave(tempzero, tempone);
+	
+
+//   for(int i = 0; i < 360; i += 5) {
+    // float y1 = 1 * sin((i + tempzero) * M_PI / 180);
+    // float y2 = 2 * sin((i + 90)* M_PI / 180);
+    // float y3 = 5 * sin((i + 180)* M_PI / 180);
+
+    // Serial.print(y1);
+    // Serial.print("\t"); // a space ' ' or  tab '\t' character is printed between the two values.
+    // Serial.println(y2);
+    // Serial.print("\t"); // a space ' ' or  tab '\t' character is printed between the two values.
+    // Serial.println(y3); // the last value is followed by a carriage return and a newline characters.
+//   }
+
 	activity = false;
 	// bool button0Temp = digitalRead(buttons[0]);
 	// bool button1Temp = digitalRead(buttons[1]);
@@ -244,6 +274,7 @@ void loop()
 		// pixels.show();
 	}
 	
+
 	// READ HARDWARE MIDI
 	while (HWMIDI.read()) {
 	}
