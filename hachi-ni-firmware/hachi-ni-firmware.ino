@@ -204,18 +204,33 @@ void plotSineWave(int x, int y) {
 	  delay(20);
    }
 }
+void sin_wrapper(double frequency, double amplitude, double phase_shift, double x) {
+    for(int i = 0; i < 360; i += 5) {
+//      float result = amplitude * sin(((i + 180) * M_PI / frequency) * x + phase_shift);
+      float result = amplitude * sin(((i + 180) * M_PI / frequency));
+      float y3 = 100 * sin((i + 180)* M_PI / 180);
+      Serial.print(y3);
+      Serial.print("\t");
+      Serial.println(result);
+      delay(10);
+    }
+//    return result;
+}
+
 // *** MAIN LOOP ****
 void loop()
 {
 	float tempzero = analog[0]->getValue();
 	tempzero = constrain(tempzero, faderMin, faderMax);
-	tempzero = map(tempzero, faderMin, faderMax, 100, 0);
+	tempzero = map(tempzero, faderMin, faderMax, 180, 0);
 	float tempone = analog[1]->getValue();
 	tempone = constrain(tempone, faderMin, faderMax);
-	tempone = map(tempone, faderMin, faderMax, 10, 1);
+	tempone = map(tempone, faderMin, faderMax, 100, 1);
 
-	plotSineWave(tempzero, tempone);
-	
+//	plotSineWave(tempzero, tempone);
+    
+      sin_wrapper(tempzero, tempone, 0, 1.0 );
+    
 
 //   for(int i = 0; i < 360; i += 5) {
     // float y1 = 1 * sin((i + tempzero) * M_PI / 180);
