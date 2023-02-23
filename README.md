@@ -65,17 +65,15 @@ avdweb_Switch    // https://github.com/avandalen/avdweb_Switch ( not in library 
 
 ---
 
-# Web Editor 
-
-Use Chrome or Edge. Firefox or Safari will not work.
+# Hachi x Ni Configurator (Web-based editor) 
 
 Visit: https://okyeron.github.io/8x2  
 
+Use Chrome or Edge. Firefox or Safari will not work.
+
 Or...  
 
- Download this repo and load the `webconfig/index.html` locally in your browser.  
-
-[Web editor source](<webconfig/index.html>)
+There's also a bare-bones version you can download this repo - load the file   `webconfig/index.html` locally in your browser.  
 
 ---
 
