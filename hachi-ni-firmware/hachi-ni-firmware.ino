@@ -1,6 +1,6 @@
 /*
 // Hachi x Ni (8x2) MIDI Controller
-// v0.7.0
+// v0.7.2
 // by Steven Noreyko
 //
 
@@ -24,18 +24,24 @@
 #include <avdweb_Switch.h>
 
 #include "config.h"
+#include "colors.h"
 
 
 //Switch(byte _pin, byte PinMode=INPUT_PULLUP, bool polarity=LOW, int debouncePeriod=50, int longPressPeriod=300, int doubleClickPeriod=250, int deglitchPeriod=10);
 Switch leftButton = Switch(buttons[0], INPUT_PULLUP, LOW, 1, 450, 350);
 Switch rightButton = Switch(buttons[1], INPUT_PULLUP, LOW, 1, 450, 350);
 
-
 // USB MIDI object
 Adafruit_USBD_MIDI usb_midi;
 // Create USB and Hardware MIDI interfaces
 MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, USBMIDI);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, HWMIDI);
+
+// USB WebUSB object
+// Landing Page: scheme (0: http, 1: https), url
+// Page source can be found at https://github.com/hathach/tinyusb-webusb-page/tree/main/webusb-rgb
+Adafruit_USBD_WebUSB usb_web;
+WEBUSB_URL_DEF(landingPage, 1 /*https*/, "okyeron.github.io/8x2/index.html");
 
 // NEOPIXELs
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(9, NEOPIXPIN, NEO_GRB + NEO_KHZ800);
@@ -90,25 +96,42 @@ int activeBank = 0;
 void leftButtonCallback(void* s) {
 //   Serial.print("Left: ");
 //   Serial.println((char*)s);
-	activeBank--;
-  	activeBank = constrain(activeBank, 0, numBanks-1);
-	USBMIDI.sendProgramChange(activeBank, 1);
-	pixelsOff();
-	pixels.setPixelColor(activeBank+1, 128, 0, 0); // bank pixels are 1-8 not 0-7
-	pixels.show();
+// 	activeBank--;
+//   	activeBank = constrain(activeBank, 0, numBanks-1);
+// 	USBMIDI.sendProgramChange(activeBank, 1);
+// 	pixelsOff();
+// 	pixels.setPixelColor(activeBank+1, 128, 0, 0); // bank pixels are 1-8 not 0-7
+// 	pixels.show();
 	// Serial.println(activeBank);
+	activeBank--;
+	activeBank = constrain(activeBank, 0, numBanks-1);
+	bankLeds();
+	USBMIDI.sendProgramChange(activeBank, 1);
 }
 
 void rightButtonCallback(void* s) {
 //   Serial.print("Right: ");
 //   Serial.println((char*)s);
-	activeBank++;
-  	activeBank = constrain(activeBank, 0, numBanks-1);
-	USBMIDI.sendProgramChange(activeBank, 1);
-	pixelsOff();
-	pixels.setPixelColor(activeBank+1, 128, 0, 0);
-	pixels.show();
+// 	activeBank++;
+//   	activeBank = constrain(activeBank, 0, numBanks-1);
+// 	USBMIDI.sendProgramChange(activeBank, 1);
+// 	pixelsOff();
+// 	pixels.setPixelColor(activeBank+1, 128, 0, 0);
+// 	pixels.show();
 	// Serial.println(activeBank);
+	activeBank++;
+	activeBank = constrain(activeBank, 0, numBanks-1);
+	bankLeds();
+	// send program change
+	USBMIDI.sendProgramChange(activeBank, 1);
+}
+
+void bankLeds(){
+	for( int i=1; i< numLEDS; i++) {
+		pixels.setPixelColor(i, bankColors2[i-1]);
+	}
+	pixels.setPixelColor(activeBank+1, bankColors[activeBank]); // bank pixels are 1-8 not 0-7
+	pixels.show();
 }
 
 
@@ -129,12 +152,15 @@ void setup() {
 	pinMode(NEOPWRPIN, OUTPUT); // NEOPWR Pin
 	digitalWrite(NEOPWRPIN, HIGH);	// Turn NEOPWR ON
 
-
 	LittleFS.begin();
 
 // 	Serial1.setRX(midi_rx_pin);
 //  Serial1.setTX(midi_tx_pin);
-    
+
+	// Initialize WebUSB for connection notification, etc
+ 	// usb_web.setLandingPage(&landingPage);
+	// usb_web.begin();
+  
 	// Initialize MIDI, and listen to all MIDI channels
 	USBMIDI.begin(MIDI_CHANNEL_OMNI);
 	HWMIDI.begin(MIDI_CHANNEL_OMNI);
@@ -166,7 +192,7 @@ void setup() {
 		delay(1000);
 	}
 
-	Serial.println("MIDI Test");
+// 	Serial.println("MIDI Test");
 	
 	// Button setup
 	// leftButton.setPushedCallback(&leftButtonCallback, (void*)"turned on");
@@ -177,6 +203,8 @@ void setup() {
   	// rightButton.setDoubleClickCallback(&rightButtonCallback, (void*)"double click");
   	rightButton.setSingleClickCallback(&rightButtonCallback, (void*)"right single click");
 
+	// force pots to read
+	forceRead = true;
 
 	if (!config_read()){
 		initCCbanks();
@@ -187,12 +215,16 @@ void setup() {
 
 	pixels.begin();				  // Start the NeoPixel object
 	pixels.clear();				  // Set NeoPixel color to black (0,0,0)
-	pixels.setBrightness(50);	  // Affects all subsequent settings
+	pixels.setBrightness(100);	  // Affects all subsequent settings
 
 	rainbow(2); 
 	pixels.setPixelColor(0, 0, 20, 20);
-	pixels.show();
+	for( int i=1; i< numLEDS; i++) {
+		pixels.setPixelColor(i, bankColors2[i-1]);
+	}
+	pixels.setPixelColor(activeBank+1, bankColors[activeBank]);
 
+	pixels.show();
 }	
 // END SETUP
 
@@ -240,6 +272,8 @@ void loop()
 			// Serial.print(ccBanks[activeBank].usbCC[i]);
 			// Serial.print(": ");
 			// Serial.println(shiftyTemp);
+
+			forceRead = false;
 		}
 		// pixels.show();
 	}

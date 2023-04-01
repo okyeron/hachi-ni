@@ -43,6 +43,7 @@ const int numKnobs = 16;
 const int numBanks = 8;
 const int buttons[2] = {25,24};
 int buttonState[2] = {0,0};
+bool forceRead = false;
 
 int faderMin = 0;
 int faderMax = 1019;
