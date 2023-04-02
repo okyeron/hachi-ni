@@ -49,6 +49,8 @@ int faderMin = 0;
 int faderMax = 1019;
 int shiftyTemp;
 bool activity = true;
+int tempFaderValues[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 
 const char* save_file = "/saved_configs.json";
 

@@ -158,8 +158,8 @@ void setup() {
 //  Serial1.setTX(midi_tx_pin);
 
 	// Initialize WebUSB for connection notification, etc
- 	// usb_web.setLandingPage(&landingPage);
-	// usb_web.begin();
+ 	usb_web.setLandingPage(&landingPage);
+	usb_web.begin();
   
 	// Initialize MIDI, and listen to all MIDI channels
 	USBMIDI.begin(MIDI_CHANNEL_OMNI);
@@ -244,7 +244,7 @@ void loop()
 
 		temp = analogRead(mux_common_pin); // mux goes into g_common_pin // sensorValue = analogRead(g_common_pin);
 		analog[i]->update(temp);
-		if(analog[i]->hasChanged()) {
+		if(analog[i]->hasChanged() || forceRead == true) {
 			temp = analog[i]->getValue();
 			temp = constrain(temp, faderMin, faderMax);
 			temp = map(temp, faderMin, faderMax, 1024, 0); // flip the value for backwards pots
@@ -262,20 +262,27 @@ void loop()
 				pixels.setPixelColor(i-7, tempR, tempG, tempB);
 			}
 			
-			
+			tempFaderValues[i] = shiftyTemp;
 			// send the message over USB and physical MIDI
 			USBMIDI.sendControlChange(ccBanks[activeBank].usbCC[i], shiftyTemp, ccBanks[activeBank].usbChannel[i]+1);
 			HWMIDI.sendControlChange(ccBanks[activeBank].trsCC[i], shiftyTemp, ccBanks[activeBank].trsChannel[i]+1);
-
-			// Serial.print(i);
-			// Serial.print(": ");
-			// Serial.print(ccBanks[activeBank].usbCC[i]);
-			// Serial.print(": ");
-			// Serial.println(shiftyTemp);
-
-			forceRead = false;
+			
 		}
 		// pixels.show();
+	}
+	
+	if (forceRead){
+		Serial.println("forceRead");
+		delay(100);
+		for (int x=0; x < 16; x++ ){
+			USBMIDI.sendControlChange(ccBanks[activeBank].usbCC[x], tempFaderValues[x], ccBanks[activeBank].usbChannel[x]+1);
+			// Serial.print(x);
+			// Serial.print(": ");
+			// Serial.print(ccBanks[activeBank].usbCC[x]);
+			// Serial.print(": ");
+			// Serial.println(tempFaderValues[x]);
+		}
+		forceRead = false;
 	}
 	
 	// READ HARDWARE MIDI
@@ -385,9 +392,10 @@ void onProgramChange(byte channel, byte program) {
 //	Serial.print (":");
 //	Serial.println (program);
 	activeBank = constrain(program, 0, numBanks-1);
-	pixelsOff();
-	pixels.setPixelColor(activeBank+1, 128, 0, 0);
-	pixels.show();
+	bankLeds();
+	// pixelsOff();
+	// pixels.setPixelColor(activeBank+1, 128, 0, 0);
+	// pixels.show();
 	
 //	USBMIDI.sendProgramChange(program, channel);
 //	HWMIDI.sendProgramChange(program, channel);
@@ -602,6 +610,7 @@ void processIncomingSysex(const uint8_t* sysexData, unsigned size) {
 			// 1F = "1nFo" - please send me your current config
 //			Serial.println("Got an 1nFo request");
 			sendCurrentState();
+			forceRead = true;
 			break;
 		case CONFIG_EDIT:
 			// 0E - c0nfig Edit - here is a new config
