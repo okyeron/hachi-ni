@@ -1,6 +1,6 @@
 /*
 // Hachi x Ni (8x2) MIDI Controller
-// v0.7.2
+// v0.7.3
 // by Steven Noreyko
 //
 
