@@ -149,8 +149,11 @@ void setup() {
 	pinMode(mux_common_pin, INPUT);
 	pinMode(TXLED, OUTPUT); // TX
 	pinMode(REDLED, OUTPUT);	// RED LED
+	digitalWrite(REDLED, LOW);
 	pinMode(NEOPWRPIN, OUTPUT); // NEOPWR Pin
 	digitalWrite(NEOPWRPIN, HIGH);	// Turn NEOPWR ON
+	pinMode(FIVEVEN, OUTPUT); // fiveVen Pin
+	digitalWrite(FIVEVEN, HIGH);	// Turn 5v enable ON
 
 	LittleFS.begin();
 
@@ -236,6 +239,17 @@ void loop()
 	// bool button1Temp = digitalRead(buttons[1]);
 	leftButton.poll();
 	rightButton.poll();
+
+	float measuredvbat = analogRead(VBATPIN);
+	measuredvbat *= 2;    // we divided by 2, so multiply back
+	measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+	measuredvbat /= 1024; // convert to voltage
+	if (measuredvbat > 4){
+		digitalWrite(REDLED, HIGH);
+	// Serial.print("VBat: " ); Serial.println(measuredvbat);	
+	}else{
+		digitalWrite(REDLED, LOW);
+	}
 	
 
 	for (int i = 0; i < 16; i++) {
@@ -272,7 +286,7 @@ void loop()
 	}
 	
 	if (forceRead){
-		Serial.println("forceRead");
+		// Serial.println("forceRead");
 		delay(100);
 		for (int x=0; x < 16; x++ ){
 			USBMIDI.sendControlChange(ccBanks[activeBank].usbCC[x], tempFaderValues[x], ccBanks[activeBank].usbChannel[x]+1);

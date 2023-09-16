@@ -36,6 +36,8 @@ const int REDLED = 14;
 const int NEOPIXPIN = 16;
 const int NEOPWRPIN = 17;
 const int numLEDS = 9;
+const int FIVEVEN = 21;
+const int VBATPIN = 28;
 
 // 8x2 globals
 const int channelCount = 16;
