@@ -9,7 +9,7 @@
 /* * firmware metadata  */
 const int MAJOR_VERSION = 0;
 const int MINOR_VERSION = 7;
-const int POINT_VERSION = 0;
+const int POINT_VERSION = 3;
 
 const int DEVICE_ID     = 5;
 
@@ -36,6 +36,8 @@ const int REDLED = 14;
 const int NEOPIXPIN = 16;
 const int NEOPWRPIN = 17;
 const int numLEDS = 9;
+const int FIVEVEN = 21;
+const int VBATPIN = 28;
 
 // 8x2 globals
 const int channelCount = 16;
@@ -43,11 +45,14 @@ const int numKnobs = 16;
 const int numBanks = 8;
 const int buttons[2] = {25,24};
 int buttonState[2] = {0,0};
+bool forceRead = false;
 
 int faderMin = 0;
 int faderMax = 1019;
 int shiftyTemp;
 bool activity = true;
+int tempFaderValues[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 
 const char* save_file = "/saved_configs.json";
 
