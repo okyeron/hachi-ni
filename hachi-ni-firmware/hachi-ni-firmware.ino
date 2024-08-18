@@ -180,6 +180,7 @@ void setup() {
 	USBMIDI.setHandleProgramChange(onProgramChange);
 	HWMIDI.setHandleProgramChange(onProgramChange);
 	USBMIDI.setHandleSystemExclusive(OnSysEx);
+	HWMIDI.setHandleSystemExclusive(OnSysExHW);
 
 
 	Serial.begin(115200);
@@ -417,11 +418,16 @@ void onProgramChange(byte channel, byte program) {
 
 void sendSysEx(uint32_t length, const uint8_t *sysexData, bool hasBeginEnd) {
 	USBMIDI.sendSysEx(length, sysexData, hasBeginEnd);
+	HWMIDI.sendSysEx(length, sysexData, hasBeginEnd);
 }
 
 void OnSysEx(byte* sysexData, unsigned length) 
 {
 	processIncomingSysex(sysexData, length);
+}
+void OnSysExHW(byte* sysexData, unsigned length) 
+{
+	sendSysEx(length, sysexData, false);
 }
 
 void sendClock() {

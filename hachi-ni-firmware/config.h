@@ -9,7 +9,7 @@
 /* * firmware metadata  */
 const int MAJOR_VERSION = 0;
 const int MINOR_VERSION = 7;
-const int POINT_VERSION = 3;
+const int POINT_VERSION = 4;
 
 const int DEVICE_ID     = 5;
 
