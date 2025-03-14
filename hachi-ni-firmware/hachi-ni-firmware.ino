@@ -2,15 +2,14 @@
 // Hachi x Ni (8x2) MIDI Controller
 // v0.7.3
 // by Steven Noreyko
-//
+*/
 
-* Arduino IDE setup:
- * - Select Tools / Board: Raspberry Pi Pico
- * - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)
- * - Select Tools / USB Stack: Adafruit TinyUSB
- * - Optional - Tools / Debug Level: Core
- * - Optional - Tools / Debug Port: Serial
-
+/* Arduino IDE setup:
+ - Select Tools / Board: Raspberry Pi Pico
+ - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)
+ - Select Tools / USB Stack: Adafruit TinyUSB
+ - Optional - Tools / Debug Level: Core
+ - Optional - Tools / Debug Port: Serial
 */
 
 #include <Arduino.h>
@@ -141,6 +140,7 @@ char prodstr[32] = "hachi-ni";
 
 // *** SETUP ****
 void setup() {
+	delay(100);
 	TinyUSBDevice.setManufacturerDescriptor(mfgstr);
 	TinyUSBDevice.setProductDescriptor(prodstr);
 
