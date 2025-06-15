@@ -2,15 +2,14 @@
 // Hachi x Ni (8x2) MIDI Controller
 // v0.7.3
 // by Steven Noreyko
-//
+*/
 
-* Arduino IDE setup:
- * - Select Tools / Board: Raspberry Pi Pico
- * - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)
- * - Select Tools / USB Stack: Adafruit TinyUSB
- * - Optional - Tools / Debug Level: Core
- * - Optional - Tools / Debug Port: Serial
-
+/* Arduino IDE setup:
+ - Select Tools / Board: Raspberry Pi Pico
+ - Select Tools / Flash Size: 2MB (Sketch: 1MB / FS: 1MB)
+ - Select Tools / USB Stack: Adafruit TinyUSB
+ - Optional - Tools / Debug Level: Core
+ - Optional - Tools / Debug Port: Serial
 */
 
 #include <Arduino.h>
@@ -141,6 +140,7 @@ char prodstr[32] = "hachi-ni";
 
 // *** SETUP ****
 void setup() {
+	delay(100);
 	TinyUSBDevice.setManufacturerDescriptor(mfgstr);
 	TinyUSBDevice.setProductDescriptor(prodstr);
 
@@ -180,6 +180,7 @@ void setup() {
 	USBMIDI.setHandleProgramChange(onProgramChange);
 	HWMIDI.setHandleProgramChange(onProgramChange);
 	USBMIDI.setHandleSystemExclusive(OnSysEx);
+	HWMIDI.setHandleSystemExclusive(OnSysExHW);
 
 
 	Serial.begin(115200);
@@ -261,7 +262,7 @@ void loop()
 		if(analog[i]->hasChanged() || forceRead == true) {
 			temp = analog[i]->getValue();
 			temp = constrain(temp, faderMin, faderMax);
-			temp = map(temp, faderMin, faderMax, 1024, 0); // flip the value for backwards pots
+			temp = map(temp, faderMin, faderMax, 1023, 0); // flip the value for backwards pots
 			
 			shiftyTemp = temp >> 3;
 			int tempR = 0;
@@ -417,11 +418,16 @@ void onProgramChange(byte channel, byte program) {
 
 void sendSysEx(uint32_t length, const uint8_t *sysexData, bool hasBeginEnd) {
 	USBMIDI.sendSysEx(length, sysexData, hasBeginEnd);
+	HWMIDI.sendSysEx(length, sysexData, hasBeginEnd);
 }
 
 void OnSysEx(byte* sysexData, unsigned length) 
 {
 	processIncomingSysex(sysexData, length);
+}
+void OnSysExHW(byte* sysexData, unsigned length) 
+{
+	sendSysEx(length, sysexData, false);
 }
 
 void sendClock() {
