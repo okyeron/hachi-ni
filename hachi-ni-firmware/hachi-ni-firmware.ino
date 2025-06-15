@@ -262,7 +262,7 @@ void loop()
 		if(analog[i]->hasChanged() || forceRead == true) {
 			temp = analog[i]->getValue();
 			temp = constrain(temp, faderMin, faderMax);
-			temp = map(temp, faderMin, faderMax, 1024, 0); // flip the value for backwards pots
+			temp = map(temp, faderMin, faderMax, 1023, 0); // flip the value for backwards pots
 			
 			shiftyTemp = temp >> 3;
 			int tempR = 0;
